@@ -11,10 +11,20 @@ stylesheet so this page reads as part of the same brand.
 
 | file | what it is |
 | --- | --- |
-| `index.html` | the entire site: HTML + CSS + JS inline |
-| `og.png` | 1200x630 social unfurl card, requested by crawlers only |
-| `functions/api/contributions.js` | Pages Function: GitHub contribution calendar proxy + 6h edge cache |
-| `wrangler.toml` | pins the compatibility date so local dev and prod behave the same |
+| `public/index.html` | the entire site: HTML + CSS + JS inline |
+| `public/og.png` | 1200x630 social unfurl card, requested by crawlers only |
+| `public/assets/mascot/` | the mascot's 17 expression frames (512px webp, ~476KB total, lazy-loaded) |
+| `worker.js` | serves the site + /api/contributions (GitHub calendar proxy, 6h edge cache) |
+| `wrangler.toml` | Workers-assets config; pins the compatibility date |
+
+## The mascot
+
+The husky-demon in the hero is a full rig (design: Husky). Idle machine (blinks,
+winks, the occasional glitch), hover grins, click for a treat. Spam-clicking
+climbs a 7-tier rage ladder that ends with him taking the whole site (the
+blacksite). Escape key or the flickering button brings the light back. Audio
+only ever starts after you touch him; reduced-motion gets a calm husky with no
+ladder. Frames beyond the idle set load on the first press.
 
 ## How the page is built
 

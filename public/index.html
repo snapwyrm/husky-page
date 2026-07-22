@@ -345,20 +345,60 @@ body{counter-reset:sec}
 .os-k{color:#4da3ff}
 .os .os-ico{color:#4da3ff;background:rgba(77,163,255,.12);border-color:rgba(77,163,255,.4)}
 .os:hover{border-color:rgba(77,163,255,.45)}
-/* the mascot: hand-drawn husky-demon, floats beside the hero copy */
-.mascot{
-  position:absolute;right:10px;top:96px;width:158px;padding:0;
-  transform:translate3d(calc(var(--px)*18px),calc(var(--py)*12px),0);
+/* the mascot: Husky's 17-frame rig. The rig element is transformed every
+   frame by its own loop (bob, parallax, shakes), so the button is a static
+   anchor and all motion lives one level down. */
+.mascot{position:absolute;right:10px;top:88px;width:170px;aspect-ratio:1;padding:0;z-index:5}
+.mascot .rig{position:absolute;inset:0;display:block;touch-action:manipulation}
+.mascot .pose{position:absolute;inset:0;display:block}
+.mascot .pose img{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
   filter:drop-shadow(0 14px 30px rgba(0,0,0,.55)) drop-shadow(0 0 26px rgba(139,92,246,.28));
-  transition:filter var(--t-fast) var(--ease-out);
+  transition:opacity .09s linear;
 }
-.mascot svg{width:100%;height:auto;animation:floaty 5.5s var(--ease-io) infinite}
-@keyframes floaty{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-9px) rotate(-2deg)}}
-.mascot:hover{filter:drop-shadow(0 14px 30px rgba(0,0,0,.55)) drop-shadow(0 0 34px rgba(139,92,246,.5))}
-.mascot:hover svg{animation-play-state:paused;transform:rotate(4deg) scale(1.04);transition:transform .25s var(--spring)}
-.mascot:active svg{transform:rotate(-3deg) scale(.96)}
-@media(max-width:900px){.mascot{width:118px;top:70px;right:6px}}
-@media(max-width:640px){.mascot{width:76px;top:2px;right:8px}}
+.mascot .pose img.back{opacity:0}
+.mascot .rig.pink .pose img{filter:drop-shadow(0 14px 30px rgba(0,0,0,.55)) drop-shadow(0 0 30px rgba(255,143,179,.5))}
+.mascot .rig.t3 .pose img{filter:drop-shadow(0 14px 30px rgba(0,0,0,.65)) drop-shadow(0 0 34px rgba(255,59,92,.5)) drop-shadow(0 0 60px rgba(124,58,237,.45))}
+.mascot .rig canvas{position:absolute;inset:0;pointer-events:none}
+.mascot .glitch{filter:drop-shadow(3px 0 rgba(255,0,80,.7)) drop-shadow(-3px 0 rgba(0,210,255,.7)) saturate(1.4)}
+.mascot .spark{position:absolute;width:7px;height:7px;border-radius:50%;pointer-events:none;opacity:0}
+.mascot .ring{position:absolute;border-radius:50%;pointer-events:none}
+.mascot .heart{position:absolute;pointer-events:none;width:18px;height:18px}
+.mascot .heart svg{width:100%;height:100%;filter:drop-shadow(0 0 8px rgba(255,143,179,.7))}
+@media(max-width:900px){.mascot{width:124px;top:66px;right:6px}}
+@media(max-width:640px){.mascot{width:82px;top:0;right:8px}}
+
+/* page-level mascot FX layers */
+#mAura{position:fixed;inset:0;pointer-events:none;z-index:42;opacity:0;transition:opacity .7s var(--ease-out);
+  background:radial-gradient(120% 100% at 50% 42%, rgba(60,8,40,0) 26%, rgba(6,2,10,.86) 80%)}
+#mFlash{position:fixed;inset:0;pointer-events:none;z-index:95;opacity:0;
+  background:radial-gradient(circle at 50% 45%, rgba(255,60,80,.6), rgba(255,255,255,.9))}
+#mScan{display:none;position:fixed;inset:0;pointer-events:none;z-index:44;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px)}
+
+/* the blacksite: he takes the page. Esc or the flickering light brings it back */
+body.blacksite{background:#000}
+.blacksite .shell{visibility:hidden}
+.blacksite .atmo,.blacksite .grain,.blacksite #fxgl,.blacksite #fx2d,.blacksite .progress{display:none!important}
+.blacksite #mScan{display:block}
+.blacksite #mAura{opacity:1;background:radial-gradient(120% 100% at 50% 45%, rgba(120,0,30,.10) 0%, rgba(0,0,0,.92) 78%)}
+.blacksite .mascot{
+  position:fixed;visibility:visible;left:50%;top:50%;right:auto;width:min(64vw,380px);
+  transform:translate(-50%,-56%);z-index:60;
+}
+.blacksite .mascot .pose{animation:bsBreathe 3.4s var(--ease-io) infinite}
+@keyframes bsBreathe{50%{transform:scale(1.02)}}
+.blacksite .mascot .pose img{filter:none}
+.bs-exit{
+  position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:61;
+  background:rgba(24,19,40,.55);border:1px solid var(--border);color:#c9c4e4;border-radius:999px;
+  padding:9px 16px;font-size:12.5px;font-weight:600;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  animation:bsFlick 5s linear infinite;
+}
+.bs-exit:hover{border-color:var(--accent-line);color:var(--text)}
+@keyframes bsFlick{0%,88%,100%{opacity:.85}90%{opacity:.2}92%{opacity:.7}95%{opacity:.3}97%{opacity:.8}}
+/* his banner, used by the rig reactions */
+.mascot .banner{position:absolute;left:50%;top:-6px;transform:translateX(-50%);background:linear-gradient(92deg,#a855f7,#22d3ee);color:#fff;font-weight:800;font-size:12px;letter-spacing:.08em;padding:6px 13px;border-radius:999px;pointer-events:none;box-shadow:0 0 22px rgba(139,92,246,.45);white-space:nowrap}
 .wcard h3{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
 .wcard p{color:var(--muted);font-size:14.5px;line-height:1.6}
 .wcard .kicker{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);margin:6px 0 10px}
@@ -810,37 +850,8 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           <span class="lbl">Discord: smthusky</span>
         </button>
       </div>
-      <button class="mascot h-fade" style="--i:3" type="button" id="mascotBtn" aria-label="The husky. Click him and every road on this page leads home.">
-        <svg viewBox="0 0 120 112" aria-hidden="true">
-          <!-- ears, tucked behind the head -->
-          <path d="M26 40 C20 20 26 8 40 8 C50 13 52 24 50 34 Z" fill="#16141c" stroke="#16141c" stroke-width="2"/>
-          <path d="M94 40 C100 20 94 8 80 8 C70 13 68 24 70 34 Z" fill="#16141c" stroke="#16141c" stroke-width="2"/>
-          <path d="M32 32 C29.5 20 32.5 13 40 12 C45 16 46 23 44.8 29 Z" fill="#e8a7b4"/>
-          <path d="M88 32 C90.5 20 87.5 13 80 12 C75 16 74 23 75.2 29 Z" fill="#e8a7b4"/>
-          <!-- cheek fluff spikes beyond the silhouette -->
-          <path d="M24 62 L10 58 L20 67 L8 70 L22 76 Z" fill="#f6f4fb"/>
-          <path d="M96 62 L110 58 L100 67 L112 70 L98 76 Z" fill="#f6f4fb"/>
-          <!-- head -->
-          <path d="M60 20 C82 20 98 36 98 60 C98 84 82 100 60 100 C38 100 22 84 22 60 C22 36 38 20 60 20 Z" fill="#f6f4fb" stroke="#16141c" stroke-width="2.5"/>
-          <!-- black mask over the top, wavy brow edge -->
-          <path d="M23.5 55 C25 36 40 21.5 60 21.5 C80 21.5 95 36 96.5 55 C90 50 84 49 79 52 C74 48 70 46.5 66 47 L60 44 L54 47 C50 46.5 46 48 41 52 C36 49 30 50 23.5 55 Z" fill="#16141c"/>
-          <!-- white blaze up the forehead -->
-          <path d="M60 26 C56.5 33 55.5 40 56.5 47 L60 44 L63.5 47 C64.5 40 63.5 33 60 26 Z" fill="#f6f4fb"/>
-          <!-- horns, growing out of the mask -->
-          <path d="M42 26 C38 16 41 7 50 3 C47 11 48 17 52 23 C49 25 45 26 42 26 Z" fill="#9a9ca6" stroke="#16141c" stroke-width="1.6"/>
-          <path d="M78 26 C82 16 79 7 70 3 C73 11 72 17 68 23 C71 25 75 26 78 26 Z" fill="#9a9ca6" stroke="#16141c" stroke-width="1.6"/>
-          <path d="M45 24 C42.5 17.5 44 11 49.5 6.5 C47.6 12.5 48.6 17.6 51 22 Z" fill="#c3c6cf"/>
-          <path d="M75 24 C77.5 17.5 76 11 70.5 6.5 C72.4 12.5 71.4 17.6 69 22 Z" fill="#c3c6cf"/>
-          <!-- eyes set into the mask -->
-          <ellipse cx="43" cy="53" rx="8.6" ry="6.8" fill="#fff" stroke="#16141c" stroke-width="1.4"/>
-          <ellipse cx="77" cy="53" rx="8.6" ry="6.8" fill="#fff" stroke="#16141c" stroke-width="1.4"/>
-          <circle cx="43.6" cy="53.4" r="4.9" fill="#69b1f0"/><circle cx="76.4" cy="53.4" r="4.9" fill="#69b1f0"/>
-          <circle cx="43.6" cy="53.4" r="2.2" fill="#101018"/><circle cx="76.4" cy="53.4" r="2.2" fill="#101018"/>
-          <circle cx="45.4" cy="51.4" r="1.3" fill="#fff"/><circle cx="78.2" cy="51.4" r="1.3" fill="#fff"/>
-          <!-- nose + smile -->
-          <path d="M60 68 C64.8 68 67.6 70.4 67.6 73 C67.6 76.2 64.4 78.2 60 78.2 C55.6 78.2 52.4 76.2 52.4 73 C52.4 70.4 55.2 68 60 68 Z" fill="#16141c"/>
-          <path d="M60 79.5 C60 83.5 63.4 86.2 67.8 86.2 M60 79.5 C60 83.5 56.6 86.2 52.2 86.2" stroke="#16141c" stroke-width="2.6" stroke-linecap="round" fill="none"/>
-        </svg>
+      <button class="mascot h-fade" style="--i:3" type="button" id="mascotBtn" aria-label="The husky mascot. He reacts. Be nice to him, or don't, your call.">
+        <span class="rig" id="mRig"><span class="pose" id="mPose"><img id="mBack" class="back" src="/assets/mascot/husky-blink.webp" alt="" width="512" height="512" decoding="async"><img id="mFront" src="/assets/mascot/husky-base.webp" alt="" width="512" height="512" decoding="async"></span></span>
       </button>
       <p class="trustline h-fade" style="--i:4">
         <span data-scramble>available now</span> <span class="sep"></span> remote <span class="sep"></span> EST
@@ -1126,6 +1137,11 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 <!-- eggs -->
 <canvas id="roads" aria-hidden="true" hidden></canvas>
 <p class="roads-phrase" id="roadsPhrase" aria-hidden="true">all roads lead to <span class="grad">husky</span></p>
+
+<div id="mAura" aria-hidden="true"></div>
+<div id="mScan" aria-hidden="true"></div>
+<div id="mFlash" aria-hidden="true"></div>
+<button id="bsExit" class="bs-exit" type="button" hidden>let him back into the light</button>
 
 <div class="sr" role="status" aria-live="polite" id="live"></div>
 <script>
@@ -2073,10 +2089,230 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     } catch (e) {}
     return { roads: roads, jackpot: jackpot };
   })();
-  /* the mascot IS a road: clicking the husky runs the phrase he stands for */
+  /* ======================================================================
+     the mascot: Husky's own rig. 17 frames, an idle machine, hover grins,
+     click treats, a 7-tier spam-click rage ladder, and the blacksite.
+     FX engine and state machine are his design (mascot_handoff), adapted:
+     webp frames, audio only after touching him, reduced-motion = calm,
+     and an escape hatch out of the blacksite.
+     ====================================================================== */
   (function () {
-    var mb = doc.getElementById('mascotBtn');
-    if (mb) mb.addEventListener('click', function () { eggs.roads(); });
+    var btn = doc.getElementById('mascotBtn'), rig = doc.getElementById('mRig');
+    if (!btn || !rig) return;
+    var pose = doc.getElementById('mPose'), front = doc.getElementById('mFront'), back = doc.getElementById('mBack');
+    var flashEl = doc.getElementById('mFlash'), aura = doc.getElementById('mAura'), bsExit = doc.getElementById('bsExit');
+    var motionOK = !reduced;
+
+    /* ---- MascotFX (his engine, verbatim behavior) ---- */
+    var FX = {};
+    (function () {
+      var bgC, fgC, bg, fg, W, H, fxTier = 0, fxBlack = false;
+      var parts = [], bolts = [], lastBeat = 0, beatHook = null, staticN = 0, ac, prev = 0;
+      var EY = [[.363, .518], [.637, .518]];
+      var R = function (a, b) { return a + Math.random() * (b - a); };
+      function mk() { var c = doc.createElement('canvas'); c.style.cssText = 'position:absolute;inset:0;pointer-events:none'; return c; }
+      function size() { W = rig.clientWidth; H = rig.clientHeight; [bgC, fgC].forEach(function (c) { c.width = W * 2; c.height = H * 2; c.style.width = W + 'px'; c.style.height = H + 'px'; }); bg.setTransform(2, 0, 0, 2, 0, 0); fg.setTransform(2, 0, 0, 2, 0, 0); }
+      FX.attach = function () { bgC = mk(); fgC = mk(); rig.insertBefore(bgC, rig.firstChild); rig.appendChild(fgC); bg = bgC.getContext('2d'); fg = fgC.getContext('2d'); size(); addEventListener('resize', size); requestAnimationFrame(fxLoop); };
+      FX.setTier = function (t) { fxTier = t; if (t < 5) bolts = []; };
+      FX.setBlack = function (b) { fxBlack = b; parts = []; bolts = []; size(); };
+      FX.setBeatHook = function (f) { beatHook = f; };
+      FX.audio = function () { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); };
+      function tone(f0, f1, dur, type, vol, lp) { if (!ac) return; var t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.0008, t0 + dur); var n = o; if (lp) { var f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; o.connect(f); n = f; } n.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + .05); }
+      FX.thump = function () { tone(52, 36, .2, 'sine', .2); setTimeout(function () { tone(48, 34, .16, 'sine', .12); }, 170); };
+      FX.growl = function () { tone(90, 30, .6, 'sawtooth', .1, 220); tone(65, 28, .6, 'square', .05, 140); };
+      FX.hiss = function () { tone(2400, 300, .35, 'sawtooth', .028, 3000); };
+      FX.boom = function () { tone(110, 24, 1.1, 'sine', .3); tone(55, 18, 1.4, 'triangle', .16); setTimeout(function () { tone(38, 22, .9, 'sine', .18); }, 140); };
+      var droneO = null, droneG = null, droneF = null;
+      FX.setDrone = function (v) { if (!ac) return;
+        if (v > 0 && !droneO) { droneO = ac.createOscillator(); droneG = ac.createGain(); droneF = ac.createBiquadFilter(); droneF.type = 'lowpass'; droneF.frequency.value = 140; droneO.type = 'sawtooth'; droneO.frequency.value = 36; droneO.connect(droneF); droneF.connect(droneG); droneG.connect(ac.destination); droneG.gain.value = 0; droneO.start(); }
+        if (droneO) { var t0 = ac.currentTime; droneG.gain.cancelScheduledValues(t0); droneG.gain.linearRampToValueAtTime(v * .055, t0 + (v === 0 ? .12 : .25)); droneO.frequency.linearRampToValueAtTime(36 + v * 22, t0 + .3); } };
+      FX.tick = function (h) { tone(180 + h * 26, 120 + h * 20, .08, 'square', .05, 900); };
+      FX.windup = function () { tone(55, 260, .34, 'sawtooth', .07, 600); tone(400, 2600, .34, 'sawtooth', .02, 4000); };
+      function P(o) { parts.push(Object.assign({ life: 1, r: 2, vx: 0, vy: 0, g: 0, seed: Math.random() * 7 }, o)); }
+      function spawn() {
+        if (fxBlack) { if (Math.random() < .5) P({ type: 'ash', x: R(0, W), y: -6, vy: R(.25, .7), vx: R(-.2, .2), max: R(240, 420), r: R(.8, 1.8) });
+          if (Math.random() < .05) P({ type: 'ember', x: R(W * .3, W * .7), y: R(H * .08, H * .3), vy: R(-.5, -.2), vx: R(-.15, .15), max: R(60, 120), r: R(1, 2.2) }); return; }
+        if (fxTier === 0) { if (Math.random() < .05) P({ type: 'mote', x: R(0, W), y: H + 4, vy: R(-.4, -.18), vx: R(-.1, .1), max: R(300, 480), r: R(.7, 1.6) }); return; }
+        if (fxTier >= 3) { for (var i = 0; i < fxTier - 1; i++) if (Math.random() < .32) P({ type: 'ember', x: R(W * .12, W * .88), y: R(H * .55, H + 6), vy: R(-1.9, -.7) - fxTier * .1, vx: R(-.3, .3), max: R(70, 150), r: R(1, 2.6) }); }
+        if (fxTier >= 4) { if (Math.random() < .3) { var hSide = Math.random() < .5; P({ type: 'smoke', x: W * (hSide ? .615 : .385) + R(-8, 8), y: H * .13 + R(-4, 6), vy: R(-.9, -.5), vx: R(-.25, .25), max: R(130, 220), r: R(7, 13), g: R(.05, .12) }); } }
+        if (fxTier >= 6) { if (Math.random() < .5) { var a = R(0, Math.PI * 2), d0 = R(W * .5, W * .72); P({ type: 'void', x: 0, y: 0, ang: a, dist: d0, max: R(120, 200), r: R(2, 5) }); } }
+      }
+      function step(p, dt) { p.life -= dt / p.max;
+        if (p.type === 'void') { p.dist -= dt * (.09 + .12 * (1 - p.life)); p.ang += dt * .0016; p.x = W / 2 + Math.cos(p.ang) * p.dist; p.y = H * .5 + Math.sin(p.ang) * p.dist; }
+        else { p.x += p.vx * dt * .06 + Math.sin((p.y + p.seed * 99) * .02) * .28; p.y += p.vy * dt * .06; p.r += (p.g || 0) * dt * .06; } }
+      function dot(p) { fg.beginPath(); fg.arc(p.x, p.y, Math.max(.2, p.r), 0, 7); fg.fill(); }
+      function draw(now) {
+        fg.clearRect(0, 0, W, H); bg.clearRect(0, 0, W, H);
+        try {
+          if (fxTier >= 3 || fxBlack) { var ph = now / (fxBlack ? 1600 : 520); var a = fxBlack ? .4 + .18 * Math.sin(ph) : .28 + .16 * Math.sin(ph);
+            EY.forEach(function (e2, k) { var x = e2[0] * W, y = e2[1] * H, r = W * (fxBlack ? .085 : .062) * (1 + .1 * Math.sin(ph + k));
+              var g2 = bg.createRadialGradient(x, y, 0, x, y, r); g2.addColorStop(0, 'rgba(255,30,60,' + a + ')'); g2.addColorStop(.5, 'rgba(190,20,90,' + (a * .5) + ')'); g2.addColorStop(1, 'rgba(120,0,60,0)'); bg.fillStyle = g2; bg.beginPath(); bg.arc(x, y, r, 0, 7); bg.fill(); }); }
+          for (var pi = 0; pi < parts.length; pi++) { var p = parts[pi], al = Math.max(0, Math.min(1, p.life));
+            if (p.type === 'mote') { fg.globalAlpha = al * .35; fg.fillStyle = '#a78bfa'; dot(p); }
+            else if (p.type === 'ash') { fg.globalAlpha = al * .5; fg.fillStyle = '#778'; dot(p); }
+            else if (p.type === 'ember') { fg.globalCompositeOperation = 'lighter'; fg.globalAlpha = al * (.55 + .45 * Math.sin(now / 60 + p.seed * 9)); fg.fillStyle = p.seed > 3.5 ? '#ff3b5c' : '#a855f7'; fg.shadowColor = fg.fillStyle; fg.shadowBlur = 8; dot(p); fg.shadowBlur = 0; fg.globalCompositeOperation = 'source-over'; }
+            else if (p.type === 'smoke') { fg.globalAlpha = al * .3; var g3 = fg.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r); g3.addColorStop(0, 'rgba(16,8,26,.92)'); g3.addColorStop(.7, 'rgba(50,20,80,.45)'); g3.addColorStop(1, 'rgba(50,20,80,0)'); fg.fillStyle = g3; fg.beginPath(); fg.arc(p.x, p.y, p.r, 0, 7); fg.fill(); }
+            else if (p.type === 'void') { fg.globalAlpha = al * .7; fg.fillStyle = '#0a0512'; fg.strokeStyle = 'rgba(139,92,246,.5)'; fg.lineWidth = .8; fg.beginPath(); fg.arc(p.x, p.y, Math.max(.2, p.r), 0, 7); fg.fill(); fg.stroke(); } }
+          fg.globalAlpha = 1;
+          for (var bi = 0; bi < bolts.length; bi++) { var b = bolts[bi]; b.life -= .11; if (b.life <= 0) continue;
+            fg.save(); fg.globalCompositeOperation = 'lighter'; fg.globalAlpha = b.life * (.55 + .45 * Math.random());
+            fg.strokeStyle = 'rgba(196,181,253,.95)'; fg.lineWidth = 2.4; fg.shadowColor = '#a855f7'; fg.shadowBlur = 16;
+            fg.beginPath(); b.pts.forEach(function (pt2, i2) { i2 ? fg.lineTo(pt2[0], pt2[1]) : fg.moveTo(pt2[0], pt2[1]); }); fg.stroke();
+            fg.lineWidth = 1; fg.strokeStyle = '#fff'; fg.stroke(); fg.restore(); }
+          bolts = bolts.filter(function (b2) { return b2.life > 0; });
+          if (staticN > 0) { staticN--; for (var si = 0; si < 260; si++) { fg.globalAlpha = Math.random() * .5; fg.fillStyle = Math.random() < .5 ? '#c8c8d8' : '#16141c'; fg.fillRect(R(0, W), R(0, H), R(4, 26), 1.2); } fg.globalAlpha = 1; }
+        } catch (e) { parts = []; bolts = []; fg.setTransform(2, 0, 0, 2, 0, 0); fg.clearRect(0, 0, W, H); fg.globalAlpha = 1; fg.globalCompositeOperation = 'source-over'; }
+      }
+      function fxLoop(now) { requestAnimationFrame(fxLoop); var dt = Math.min(50, now - (prev || now - 16)); prev = now;
+        if (motionOK) { spawn(); for (var i = 0; i < parts.length; i++) step(parts[i], dt); parts = parts.filter(function (p) { return p.life > 0 && p.y > -30 && p.y < H + 40; }); }
+        draw(now);
+        var iv = fxBlack ? 1500 : fxTier >= 6 ? 480 : fxTier >= 5 ? 640 : fxTier >= 4 ? 860 : 0;
+        if (iv && now - lastBeat > iv) { lastBeat = now; FX.thump(); if (beatHook) beatHook(); } }
+      FX.lightning = function () { if (!motionOK) return; FX.hiss();
+        var n = 2 + (Math.random() * 2 | 0);
+        for (var k = 0; k < n; k++) { var x = R(W * .15, W * .85), y = -4, pts = [[x, y]], yEnd = H * R(.35, .6);
+          while (y < yEnd) { x += R(-26, 26); y += R(14, 34); pts.push([x, y]); }
+          bolts.push({ pts: pts, life: 1 }); } };
+      FX.staticBurst = function () { staticN = 5; };
+      FX.burstEmbers = function (n) { for (var i = 0; i < (n || 24); i++) P({ type: 'ember', x: R(W * .2, W * .8), y: R(H * .3, H * .8), vy: R(-2.5, -.8), vx: R(-1.2, 1.2), max: R(50, 110), r: R(1.2, 3) }); };
+    })();
+
+    /* ---- frames ---- */
+    var NAMES = ['base', 'blink', 'wink', 'grin', 'tongue', 'blush', 'blush-tongue', 'blep', 'annoyed', 'growl', 'demon', 'sheepish', 'shadow', 'possessed', 'umbral', 'overlord', 'blacksite'];
+    var F = {};
+    NAMES.forEach(function (n) { F[n] = '/assets/mascot/husky-' + n + '.webp'; });
+    var CORE = ['base', 'blink', 'wink', 'grin', 'tongue', 'blush-tongue', 'blep', 'sheepish'];
+    function preload(list) { list.forEach(function (n) { var i = new Image(); i.src = F[n]; }); }
+    if ('requestIdleCallback' in window) requestIdleCallback(function () { preload(CORE); }, { timeout: 4000 });
+    else setTimeout(function () { preload(CORE); }, 2500);
+    var allLoaded = false;
+    function preloadAll() { if (!allLoaded) { allLoaded = true; preload(NAMES); } }
+
+    FX.attach();
+    FX.setBeatHook(function () { if (black || tier >= 4) pose.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.028)' }, { transform: 'scale(1)' }], { duration: 230, easing: 'ease-out' }); });
+
+    var cur = 'base';
+    function show(n, dur) { if (n === cur) return; back.style.transitionDuration = (dur || 90) + 'ms'; back.src = F[cur]; back.style.opacity = 1; front.src = F[n]; cur = n;
+      requestAnimationFrame(function () { requestAnimationFrame(function () { back.style.opacity = 0; }); }); }
+    function wiggle(deg, ms) { if (!motionOK) return; pose.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(' + (-deg) + 'deg)', offset: .25 }, { transform: 'rotate(' + deg + 'deg)', offset: .62 }, { transform: 'rotate(0deg)' }], { duration: ms || 620, easing: 'ease-in-out' }); }
+    function flash(a) { if (motionOK && flashEl.animate) flashEl.animate([{ opacity: a }, { opacity: 0 }], { duration: 280, easing: 'ease-out' }); }
+    function shake(amp, ms) { if (!motionOK) return; var kf = [{ transform: 'translate(0,0)' }];
+      for (var i = 1; i < 8; i++) kf.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * amp) + 'px,' + ((Math.random() * 2 - 1) * amp * .6) + 'px)' });
+      kf.push({ transform: 'translate(0,0)' }); pose.animate(kf, { duration: ms || 400, easing: 'linear' }); }
+    function burst(n, colors) { if (!motionOK) return; n = n || 14; colors = colors || ['#a855f7', '#22d3ee', '#34d399', '#c4b5fd'];
+      for (var i = 0; i < n; i++) { var s = doc.createElement('div'); s.className = 'spark';
+        var hue = colors[i % colors.length]; s.style.background = hue; s.style.boxShadow = '0 0 10px ' + hue;
+        s.style.left = (rig.clientWidth / 2) + 'px'; s.style.top = (rig.clientHeight / 2) + 'px'; rig.appendChild(s);
+        (function (s2) { var a = Math.random() * Math.PI * 2, d = 60 + Math.random() * 80;
+          s2.animate([{ opacity: 1, transform: 'translate(0,0) scale(1)' }, { opacity: 0, transform: 'translate(' + (Math.cos(a) * d) + 'px,' + (Math.sin(a) * d - 34) + 'px) scale(.2)' }], { duration: 650 + Math.random() * 420, easing: 'cubic-bezier(.16,.84,.44,1)' }).onfinish = function () { s2.remove(); }; })(s); } }
+    function ring(color) { if (!motionOK) return; var e = doc.createElement('div'); e.className = 'ring';
+      e.style.cssText = 'left:' + (rig.clientWidth / 2) + 'px;top:' + (rig.clientHeight / 2) + 'px;width:20px;height:20px;margin:-10px 0 0 -10px;border:3px solid ' + (color || '#ffd76b') + ';box-shadow:0 0 18px ' + (color || '#ffd76b');
+      rig.appendChild(e);
+      e.animate([{ opacity: .95, transform: 'scale(.4)' }, { opacity: 0, transform: 'scale(4.2)' }], { duration: 620, easing: 'cubic-bezier(.16,.84,.44,1)' }).onfinish = function () { e.remove(); }; }
+    function winkFx() { if (!motionOK) return; var w = rig.clientWidth, x = w * .63, y = rig.clientHeight * .403;
+      var e = doc.createElement('div'); e.className = 'ring';
+      e.style.cssText = 'left:' + x + 'px;top:' + y + 'px;width:14px;height:14px;margin:-7px 0 0 -7px;border:2px solid #22d3ee;box-shadow:0 0 12px #22d3ee';
+      rig.appendChild(e); e.animate([{ opacity: .9, transform: 'scale(.4)' }, { opacity: 0, transform: 'scale(4.4)' }], { duration: 520, easing: 'cubic-bezier(.16,.84,.44,1)' }).onfinish = function () { e.remove(); }; }
+
+    /* pointer parallax + idle bob (his loop, on the shared rAF) */
+    var heat = 0, tier = 0, lastPress = 0, black = false;
+    var tx = 0, ty = 0, rx = 0, ry = 0, press = 1, pt = 1, rt0 = performance.now();
+    if (motionOK) addEventListener('pointermove', function (e) {
+      var r = rig.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      tx = clamp((e.clientX - cx) / 500, -1, 1); ty = clamp((e.clientY - cy) / 500, -1, 1); }, { passive: true });
+    if (motionOK) loop.add(function (dt, now) {
+      rx += (tx - rx) * .08; ry += (ty - ry) * .08; press += (pt - press) * .2;
+      var dir = (tier >= 5 || black) ? -1.4 : 1;
+      var bound = [4, 8, 12, 15, 18, 21, 24].find(function (b) { return b > heat; });
+      var simmer = (tier > 0 && !black && bound && bound - heat <= 2) ? (3 - (bound - heat)) : 0;
+      var jx = simmer ? (Math.random() - .5) * simmer * 1.7 : 0, jy = simmer ? (Math.random() - .5) * simmer * 1.2 : 0;
+      var bob = Math.sin((now - rt0) / 1700) * 4;
+      rig.style.transform = 'translate(' + jx + 'px,' + (bob + jy) + 'px) rotate(' + (dir * rx * 5) + 'deg) translateX(' + (dir * rx * 8) + 'px) scale(' + press + ')';
+      rig.style.transformOrigin = '50% 80%';
+    });
+
+    /* idle machine */
+    var hovering = false, busy = false, beat = 0;
+    function idle() { beat++;
+      if (!busy && !hovering && tier === 0 && !black && !doc.hidden) {
+        if (beat % 9 === 0) { busy = true; show('blush-tongue'); setTimeout(function () { show('base'); busy = false; }, 950); }
+        else if (beat % 4 === 0) { busy = true; show('wink', 120); winkFx(); setTimeout(function () { show('base', 140); busy = false; }, 780); }
+        else { busy = true; show('blink'); setTimeout(function () { show(hovering ? 'grin' : 'base'); busy = false; }, 150); }
+      }
+      setTimeout(idle, 2400 + Math.random() * 1800); }
+    if (motionOK) setTimeout(idle, 2200);
+    /* rare glitch tease */
+    if (motionOK) setInterval(function () { if (tier === 0 && !busy && !black && !doc.hidden && Math.random() < .55) {
+      busy = true; pose.classList.add('glitch'); var prevSrc = F[cur]; front.src = F['demon'];
+      FX.staticBurst(); FX.hiss(); shake(6, 220);
+      setTimeout(function () { front.src = prevSrc; pose.classList.remove('glitch'); busy = false; }, 130); } }, 29000);
+
+    /* interactions */
+    rig.parentNode.addEventListener('pointerenter', function () { hovering = true; if (!busy && tier === 0 && !black) show('grin'); });
+    rig.parentNode.addEventListener('pointerleave', function () { hovering = false; if (!busy && tier === 0 && !black) show('base'); });
+    var treatTimers = [];
+    function treat() { if (busy || tier > 0) return; busy = true;
+      show('blink', 60); pt = .9; treatTimers = [setTimeout(function () { pt = 1.06; }, 150), setTimeout(function () { pt = 1; }, 330),
+      setTimeout(function () { if (tier === 0) show('tongue', 130); }, 120),
+      setTimeout(function () { if (tier === 0) { show('blep', 150); wiggle(4.5, 700); ring('#22d3ee'); burst(10, ['#22d3ee', '#34d399', '#c4b5fd']); } }, 560),
+      setTimeout(function () { if (tier === 0) show(hovering ? 'grin' : 'base', 160); busy = false; }, 1650)]; }
+
+    var tierOf = function (h) { return h >= 24 ? 7 : h >= 21 ? 6 : h >= 18 ? 5 : h >= 15 ? 4 : h >= 12 ? 3 : h >= 8 ? 2 : h >= 4 ? 1 : 0; };
+    function applyTier(prev) { rig.classList.toggle('t3', tier >= 3 && tier < 7); FX.setTier(tier);
+      if (tier > 0 && prev === 0) { treatTimers.forEach(clearTimeout); treatTimers = []; busy = false; pt = 1; }
+      aura.style.opacity = (tier >= 3 && tier < 7) ? 1 : 0;
+      if (tier === 0) {
+        if (prev >= 1) { busy = true; show('sheepish', 200); setTimeout(function () { show(hovering ? 'grin' : 'base', 220); busy = false; }, 1600); }
+        else if (!busy) show(hovering ? 'grin' : 'base', 160); }
+      if (tier === 1) { show('annoyed', 150); }
+      if (tier === 2) { show('growl', 120); FX.growl(); shake(5, 420); burst(8, ['#ff5c6c', '#a855f7']); }
+      if (tier === 3) { show('demon', 160); FX.growl(); flash(.22); ring('#ff3b5c'); burst(24, ['#ff3b5c', '#a855f7', '#7c3aed']); shake(9, 700); }
+      if (tier === 4) { show('shadow', 170); FX.growl(); flash(.3); FX.burstEmbers(18); ring('#a855f7'); burst(22, ['#ff3b5c', '#7c3aed', '#a855f7']); shake(10, 800); }
+      if (tier === 5) { show('possessed', 180); FX.growl(); FX.lightning(); flash(.45); ring('#ff2222'); burst(26, ['#ff2222', '#7c3aed']); shake(12, 900); }
+      if (tier === 6) { show('umbral', 200); FX.lightning(); flash(.5); ring('#7c3aed'); burst(26, ['#7c3aed', '#4c1d95', '#ff3b5c']); shake(13, 1000); doc.body.style.filter = 'saturate(.55) contrast(1.07)'; }
+      if (tier < 6 && !black) { doc.body.style.filter = ''; }
+      if (tier === 7) { show('overlord', 220); FX.setDrone(1); FX.boom(); FX.lightning(); flash(.85); ring('#ff1f3d'); burst(34, ['#ff1f3d', '#7c3aed', '#c4b5fd']); shake(16, 1200); FX.burstEmbers(30);
+        setTimeout(function () { FX.lightning(); flash(.4); }, 260);
+        setTimeout(function () { FX.lightning(); flash(.3); FX.burstEmbers(16); }, 540);
+        setTimeout(enterBlacksite, 1050); } }
+    function enterBlacksite() { if (tier !== 7) return; black = true; doc.body.classList.add('blacksite');
+      rig.classList.remove('t3'); FX.setBlack(true); FX.setDrone(0); flash(.9);
+      atmo.pause();
+      setTimeout(function () { FX.boom(); FX.staticBurst(); }, 180);
+      show('blacksite', 400); bsExit.hidden = false;
+      live.textContent = 'He took the site. Press Escape, or let him back into the light.';
+      doc.dispatchEvent(new CustomEvent('snapwyrm:blacksite'));
+      burst(20, ['#7c3aed', '#a855f7']); }
+    function exitBlacksite() { if (!black) return; black = false; doc.body.classList.remove('blacksite');
+      FX.setBlack(false); FX.setDrone(0); doc.body.style.filter = ''; aura.style.opacity = 0;
+      heat = 0; var p = tier; tier = 0; bsExit.hidden = true; atmo.resume(); applyTier(p || 1);
+      live.textContent = 'The light is back.'; }
+    bsExit.addEventListener('click', exitBlacksite);
+    addEventListener('keydown', function (e) { if (e.key === 'Escape' && black) exitBlacksite(); });
+    /* cooldown */
+    setInterval(function () { if (black) return;
+      if (tier > 0 && tier < 7 && Date.now() - lastPress > 3000) { heat = 0; FX.setDrone(0); var p = tier; tier = 0; applyTier(p); }
+      else if (heat > 0 && tier === 0 && Date.now() - lastPress > 1500) { heat--; FX.setDrone(Math.min(1, heat / 24)); } }, 500);
+    var winding = false;
+    function pressHim() { lastPress = Date.now(); FX.audio(); preloadAll();
+      if (black) { burst(6, ['#7c3aed', '#ff1f3d']); FX.staticBurst(); return; }
+      if (!motionOK) { /* calm mode: no ladder, just a wink */ show('wink', 120); setTimeout(function () { show('base', 140); }, 700); return; }
+      heat = Math.min(26, heat + 1); FX.tick(heat); FX.setDrone(Math.min(1, heat / 24));
+      if (tier > 0 && tier < 3) aura.style.opacity = Math.min(.55, (heat - 3) * .09);
+      var t = tierOf(heat);
+      if (t !== tier && !winding) { var p = tier;
+        if (t >= 3) { winding = true; FX.windup(); flash(.12);
+          pose.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }], { duration: 240, easing: 'ease-in' });
+          setTimeout(function () { winding = false; tier = tierOf(heat); applyTier(p); }, 250); }
+        else { tier = t; applyTier(p); } }
+      else if (tier >= 5) { burst(6, ['#ff3b5c', '#7c3aed']); shake(8, 320); if (Math.random() < .4) { FX.lightning(); flash(.25); } }
+      else if (tier >= 3) { burst(6, ['#ff3b5c', '#7c3aed']); shake(7, 300); }
+      else if (tier === 2) { shake(4, 260); }
+      else if (tier === 1) { shake(2.5, 200); }
+      else treat(); }
+    btn.addEventListener('pointerdown', pressHim);
+    /* keyboard activation gets the same husky */
+    btn.addEventListener('click', function (e) { if (e.detail === 0) pressHim(); });
   })();
 
   /* ======================================================================
