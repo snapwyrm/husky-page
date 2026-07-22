@@ -1,0 +1,11 @@
+# Workers-assets project: static site in ./public, worker.js for /api/*.
+# The pinned compatibility date keeps local dev and production on the same
+# runtime behavior. The name must match the Cloudflare project (husky-page).
+name = "husky-page"
+main = "worker.js"
+compatibility_date = "2026-07-13"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = ["/api/*"]
