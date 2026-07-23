@@ -1124,15 +1124,41 @@ body.blacksite{background:#000}
 /* the price list is a well, not a raised card: it sits at the bottom of the
    elevation ladder so the things above it can outrank it */
 .svc-card{border-radius:var(--radius);padding:var(--s2) var(--s4);background:var(--e1);box-shadow:var(--rim-1)}
-.svc{
+/* each row is a native <details>. A price with no scope reads cheap rather than
+   clear: "from $120" for a web app could mean a contact form or an admin
+   dashboard, and the buyer cannot tell which. The scope now lives one keystroke
+   away without making the section any longer. <details> is keyboard native,
+   screen-reader native, and works with JavaScript dead, so this costs no JS. */
+.svc{border-bottom:1px solid var(--border)}
+.svc:last-of-type{border-bottom:none}
+.svc > summary{
   display:flex;justify-content:space-between;align-items:baseline;gap:16px;
-  padding:14px 12px;margin-inline:-12px;border-radius:10px;font-size:15px;
-  border-bottom:1px solid var(--border);
+  padding:15px 12px;margin-inline:-12px;border-radius:10px;font-size:var(--fs-md);
+  cursor:pointer;list-style:none;min-height:48px;
   transition:background var(--t-fast) var(--ease-out), padding-left var(--t-fast) var(--ease-out);
 }
-.svc:last-of-type{border-bottom:none}
-.svc:hover{background:rgba(255,255,255,.03);padding-left:18px}
-.svc b{color:var(--accent-hot);white-space:nowrap;font-weight:600;font-variant-numeric:tabular-nums}
+.svc > summary::-webkit-details-marker{display:none}
+.svc > summary:hover{background:rgba(255,255,255,.03);padding-left:18px}
+.svc[open] > summary{background:rgba(255,255,255,.03)}
+.svc > summary:focus-visible{outline:2px solid var(--accent-hot);outline-offset:-2px}
+.svc .lbl{display:flex;align-items:baseline;gap:9px;min-width:0}
+/* the caret is the only affordance saying a row opens, so it has to be visible
+   before hover, not only on it */
+.svc .caret{
+  width:9px;height:9px;flex:0 0 auto;align-self:center;color:var(--muted-2);
+  transition:transform var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out);
+}
+.svc[open] .caret{transform:rotate(90deg);color:var(--accent-hot)}
+.svc > summary:hover .caret{color:var(--accent-hot)}
+.svc b{color:var(--accent-hot);white-space:nowrap;font-weight:600}
+.svc-body{padding:0 12px 16px;margin-inline:-12px;max-width:64ch}
+.svc-body p{color:var(--muted);font-size:var(--fs-sm);line-height:1.6;margin:0}
+.svc-body a{color:var(--accent-hot)}
+.svc-body a:hover{text-decoration:underline}
+.svc-body .built{
+  display:block;font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;
+  letter-spacing:var(--track-caps-sm);color:var(--muted-2);margin-bottom:5px;
+}
 .marq{
   margin-top:22px;overflow:hidden;border-block:1px solid var(--border);
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
@@ -1408,7 +1434,14 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   transform:rotate(var(--a)) scaleX(0);opacity:.6;
 }
 #intro.s1 .iroad{transition:transform .8s var(--ease-out);transition-delay:var(--d);transform:rotate(var(--a)) scaleX(1)}
-#intro .icore{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;height:120px}
+#intro .icore{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:120px;height:120px;z-index:2}
+/* the handoff: everything except the core steps aside so the diamond can
+   travel to the nav mark alone. Opacity only, and the curtain lift never waits
+   on this, so a stalled transition cannot hold the page. */
+#intro.handoff .iroad,#intro.handoff .iurl,#intro.handoff .ibar,#intro.handoff .iskip{
+  opacity:0;transition:opacity .26s var(--ease-out);
+}
+#intro.handoff .shard{opacity:.55;transition:opacity .3s var(--ease-out)}
 #intro .shard{
   position:absolute;inset:0;opacity:0;
   transition:transform .7s var(--ease-out), opacity .5s var(--ease-out);transition-delay:var(--d);
@@ -1473,6 +1506,27 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 }
 @media(max-width:640px){
   .bigword-wrap{padding-top:16px}
+}
+
+/* ---- touch targets -------------------------------------------------------
+   Standalone controls get a 44px minimum. Inline links inside a sentence are
+   deliberately left alone: WCAG 2.5.8 exempts them, and padding them out would
+   break the line boxes of the prose they sit in. The rule is written for both
+   narrow screens and coarse pointers, because a touch laptop is neither small
+   nor precise. */
+@media (max-width:720px), (pointer: coarse){
+  .brand,.kbd-pill,.nav-link,.seal-btn,.foot-links a{
+    min-height:44px;display:inline-flex;align-items:center;
+  }
+  .foot-links{gap:2px}
+  /* the card title is the card's primary action, so it gets real height even
+     though it reads as a heading. The negative margin cancels the padding in
+     layout, so the target grows without the card's rhythm changing; the extra
+     area only overlaps the shot above and the kicker below, neither of which
+     is interactive, so nothing else can lose a tap to it. */
+  .linked h3 a{padding-block:11px;margin-block:-11px;min-height:44px}
+  .ms-close{width:44px;height:44px}
+  .js-copy,.btn{min-height:46px}
 }
 @media(max-width:420px){
   .ms-board{grid-template-columns:repeat(9,minmax(28px,1fr));gap:3px;width:100%}
@@ -1771,11 +1825,26 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       </h2>
     </div>
     <div class="svc-card reveal">
-      <div class="svc"><span>Discord bot (commands, economy, tickets, AI)</span><b>from $90</b></div>
-      <div class="svc"><span>Web app, tool, or dashboard</span><b>from $120</b></div>
-      <div class="svc"><span>Automation pipeline (APIs, scraping, AI)</span><b>from $300</b></div>
-      <div class="svc"><span>Full MVP build</span><b>from $1,200</b></div>
-      <div class="svc"><span>Roblox systems and scripting</span><b>DM for quote</b></div>
+      <details class="svc">
+        <summary><span class="lbl"><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Discord bot (commands, economy, tickets, AI)</span></span><b>from $90</b></summary>
+        <div class="svc-body"><p><span class="built">Built already</span>Economy, tickets, moderation, giveaways, roles, AI auto-reply. Multiple bots running in real servers, including one wired into a live web economy with audited transfers.</p></div>
+      </details>
+      <details class="svc">
+        <summary><span class="lbl"><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Web app, tool, or dashboard</span></span><b>from $120</b></summary>
+        <div class="svc-body"><p><span class="built">Built already</span>Snapwyrm: a React frontend on a Cloudflare Pages Functions backend with D1 SQL, realtime multiplayer, user accounts, a full admin ops dashboard, payment integration, and compliance gates. Built end to end, solo. <a href="https://snapwyrm.com" target="_blank" rel="noopener">snapwyrm.com</a></p></div>
+      </details>
+      <details class="svc">
+        <summary><span class="lbl"><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Automation pipeline (APIs, scraping, AI)</span></span><b>from $300</b></summary>
+        <div class="svc-body"><p><span class="built">Built already</span>TikTok Live pipelines: chat-to-game triggers, gift and like events driving overlays and goals, and account-growth automations. If it has an API, it can be wired up.</p></div>
+      </details>
+      <details class="svc">
+        <summary><span class="lbl"><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Full MVP build</span></span><b>from $1,200</b></summary>
+        <div class="svc-body"><p><span class="built">Built already</span>OffsiteAI: an AI worker for contracting businesses that answers customer questions, gives instant estimates, and books appointments on the site, 24/7. Built with a partner. <a href="https://offsiteai.io" target="_blank" rel="noopener">offsiteai.io</a></p></div>
+      </details>
+      <details class="svc">
+        <summary><span class="lbl"><svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Roblox systems and scripting</span></span><b>DM for quote</b></summary>
+        <div class="svc-body"><p><span class="built">Built already</span>Husky&rsquo;s Minesweeper: a game in Lua with a 1,000+ member community and cross-platform account linking, where site roles and badges sync in-game through a secured API. <a href="https://www.roblox.com/games/102439634201559/Huskys-Minesweeper" target="_blank" rel="noopener">roblox.com</a></p></div>
+      </details>
     </div>
     <p class="note reveal">Fixed quotes, 50% upfront, 50% on delivery. Fast turnaround because I use AI tooling
     aggressively and verify everything it touches.</p>
@@ -2322,16 +2391,54 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     var url = 'husky.snapwyrm.com', iurl = doc.getElementById('iurl'), ibar = doc.getElementById('ibar');
     var t0 = performance.now(), done = false;
 
+    /* The loader ends by FLIPping its own diamond into the nav mark, so the
+       intro resolves into the page instead of being wiped off it. The core is
+       already the same shape as the brand mark, which is what makes the morph
+       read as one object arriving rather than two objects swapping.
+
+       Measured once, then a single composited transform. If anything about the
+       measurement is unavailable (no WAAPI, no layout, reduced motion) the old
+       straight-to-curtain path runs unchanged, because the curtain lift is
+       never made to depend on the animation finishing. */
+    function flipCore(after) {
+      var core = el.querySelector('.icore'), mark = doc.querySelector('#brandMark .mark');
+      /* `reduced` is the shared top-level flag; motionOK is scoped to the FX
+         module and is not visible from here */
+      if (reduced || !core || !mark || !core.animate) return after(false);
+      var a = core.getBoundingClientRect(), b = mark.getBoundingClientRect();
+      if (!a.width || !b.width) return after(false);
+      var s = b.width / a.width;
+      var dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+      var dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+      var anim;
+      try {
+        anim = core.animate(
+          [{ transform: 'translate(-50%,-50%)', opacity: 1 },
+           { transform: 'translate(-50%,-50%) translate(' + dx + 'px,' + dy + 'px) scale(' + s + ')', opacity: .85 }],
+          { duration: 560, easing: 'cubic-bezier(.83,0,.17,1)', fill: 'forwards' });
+      } catch (e) { return after(false); }
+      /* the roads and the URL get out of the way while the core travels */
+      el.classList.add('handoff');
+      var fired = false, go = function () { if (fired) return; fired = true; after(true); };
+      anim.addEventListener ? anim.addEventListener('finish', go) : (anim.onfinish = go);
+      /* never let a stalled animation strand the curtain */
+      setTimeout(go, 900);
+    }
+
     function finish(fast) {
       if (done) return; done = true;
-      el.classList.add('lift');
-      root.classList.add('hero-in');
-      window.__startFx(); /* the sky starts as the curtain lifts */
-      setTimeout(function () {
-        root.classList.remove('intro');
-        if (el.parentNode) el.parentNode.removeChild(el);
-      }, fast ? 350 : 700);
-      setTimeout(settle, 2600);
+      var drop = function () {
+        el.classList.add('lift');
+        root.classList.add('hero-in');
+        window.__startFx(); /* the sky starts as the curtain lifts */
+        setTimeout(function () {
+          root.classList.remove('intro');
+          if (el.parentNode) el.parentNode.removeChild(el);
+        }, fast ? 350 : 700);
+        setTimeout(settle, 2600);
+      };
+      /* a skip should feel instant, so only the full run earns the handoff */
+      if (fast) drop(); else flipCore(drop);
     }
     /* skip on any input */
     ['pointerdown', 'keydown', 'wheel'].forEach(function (ev) {
