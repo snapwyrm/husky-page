@@ -749,7 +749,25 @@ body{counter-reset:sec}
    perceptual channel (geometry / luma / chroma / noise).
    ========================================================================== */
 body.blacksite{background:#000}
-.blacksite .shell{visibility:hidden}
+/* visibility, never display. The mascot lives inside .shell and is only on
+   screen because the rule below re-shows him as a descendant; display:none here
+   would delete him outright.
+   And never put transform, filter, contain, will-change or backdrop-filter on
+   .shell in this state. Any of those makes it the containing block for the
+   position:fixed mascot, and he gets measured against this box instead of the
+   viewport and clipped. That bug has been fixed twice already, see the two
+   comments further down.
+   height + overflow is the safe way to collapse it: a fixed descendant's
+   containing block is the viewport, which is outside .shell, so overflow here
+   cannot clip him. Collapsing it is what hands the document's height over to
+   #bsRail, which is what makes the descent exactly as deep as we say. */
+.blacksite .shell{visibility:hidden;height:100vh;overflow:hidden}
+/* The descent runway, and the only thing giving the page height while he has
+   it. Its height is written in PIXELS by JS, never vh: on a phone the URL bar
+   hides and shows, vh changes under you mid-scroll, and the depth reading
+   jitters with it. */
+#bsRail{display:none}
+.blacksite #bsRail{display:block;width:1px;pointer-events:none}
 .blacksite .atmo,.blacksite .grain,.blacksite #fxgl,.blacksite #fx2d,.blacksite .progress{display:none!important}
 .blacksite #mScan{display:block}
 .blacksite #mAura{opacity:1;background:radial-gradient(120% 100% at 50% 45%, rgba(120,0,30,.10) 0%, rgba(0,0,0,.92) 78%)}
@@ -764,20 +782,140 @@ body.blacksite{background:#000}
    winning the transform and leaving him uncentred with his ears clipped.
    While he owns the page he is not part of the hero, so force it. */
 .blacksite .mascot{
-  position:fixed;visibility:visible;left:50%;top:44%;right:auto;
-  width:min(42vw,290px);max-height:76vh;
+  position:fixed;visibility:visible;left:50%;top:46%;right:auto;
+  /* ONE square constraint, not width plus a max-height. .mascot carries
+     aspect-ratio:1, and clamping height on an aspect-ratio box makes the box
+     non-square: the art then squashes or gets trimmed, and the ears are the
+     first thing to go because they are the tallest part of him. Folding the
+     viewport height into the width keeps him square at every size, so a short
+     window shrinks him instead of cropping him. */
+  width:min(42vw,290px,66vh);
   transform:translate(-50%,-50%)!important;opacity:1!important;z-index:60;
+  overflow:visible;
 }
 @media(max-width:640px){
-  .blacksite .mascot{width:min(58vw,230px);top:40%}
+  .blacksite .mascot{width:min(58vw,230px,60vh);top:42%}
 }
 .blacksite .mascot .pose{animation:bsBreathe 3.4s var(--ease-io) infinite}
 @keyframes bsBreathe{50%{transform:scale(1.02)}}
-.blacksite .mascot .pose img{filter:none}
+/* Nothing in his own stack may clip him. */
+.blacksite .mascot .rig,.blacksite .mascot .pose{overflow:visible}
+.blacksite .mascot .pose img{
+  filter:none;
+  /* contain, so the whole frame is inside the box whatever shape it ends up */
+  object-fit:contain;
+  /* This frame's artwork sits 3.3% from the top of its own canvas where the
+     base frame sits at 6.2%, so it has half the headroom of every other pose
+     and the ear tips read as touching the edge. Insetting it here gives him
+     real clearance without re-exporting the art or changing his proportions,
+     and it costs nothing because it is a compositor transform. */
+  transform:scale(.93);
+}
 
 /* the stage. hidden entirely until he takes the page */
 #bsLayer{display:none}
 .blacksite #bsLayer{display:block;position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden}
+
+/* ---- the floors: recovered channels, stacked below the surface ----------
+   The stage is fixed, so the floors do not scroll with the document. They read
+   the scroll and move themselves, which is what keeps this to one style write
+   per frame instead of a scroll-linked reflow of seven full-viewport panels.
+   --bsD is the eased depth in floors, written once per frame onto #bsLayer.
+   --f is the floor's own index, set once in the markup. */
+#bsFloors{position:absolute;inset:0;pointer-events:none}
+/* --bsD needs a declared default. Without one the calc below is invalid until
+   the first frame writes the property, the whole transform is dropped, and all
+   seven floors stack on top of each other at the surface. */
+#bsLayer{--bsD:0}
+.bs-floor{
+  position:absolute;inset:0;contain:paint;
+  transform:translate3d(0,calc((var(--f) - var(--bsD)) * 100%),0);
+}
+/* more than a screen and a half away is not on camera. Toggled when the camera
+   crosses a floor, never per frame. */
+.bs-floor.far{visibility:hidden}
+
+/* ---- floor furniture ----------------------------------------------------
+   These sit in #bsLayer, not in #bsMirror, so they do NOT inherit the sick
+   palette override and every colour here is explicit. Authored at roughly 5:1
+   or better on near-black, because #bsPost (overlay .14) and #mGrille (screen
+   .06) composite over all of it and eat a little of the ratio.
+   Only .bs-dim is allowed under AA, and only on lines carrying no information. */
+.bs-floor{
+  --bs-ink:#b9a9a6; --bs-lbl:#8a9a78; --bs-ok:#7f9c6b; --bs-bad:#d4695f;
+  --bs-hi:#c8bdb6; --bs-dim:#4a5c3a;
+  font-family:ui-monospace,'Cascadia Mono','Segoe UI Mono',Consolas,monospace;
+  color:var(--bs-ink);
+  padding:9vh clamp(16px,5vw,64px) 0;
+}
+.bs-hd{max-width:900px;margin:0 auto 22px}
+.bs-hd i{display:block;font-style:normal;font-size:11px;letter-spacing:.24em;color:var(--bs-dim)}
+.bs-hd b{display:block;font-size:clamp(20px,3.6vw,34px);letter-spacing:.06em;color:var(--bs-hi);margin-top:6px}
+.bs-hd span{display:block;font-size:11.5px;letter-spacing:.2em;color:var(--bs-lbl);margin-top:8px}
+
+/* the recovered records */
+.bs-recs{max-width:900px;margin:0 auto;display:grid;gap:10px;
+  grid-template-columns:repeat(2,minmax(0,1fr));max-height:62vh;overflow:hidden;
+  -webkit-mask-image:linear-gradient(180deg,#000 84%,transparent);
+  mask-image:linear-gradient(180deg,#000 84%,transparent);
+}
+.bs-rec{border:1px solid rgba(160,140,136,.22);padding:10px 12px;font-size:11.5px;line-height:1.55}
+.bs-rec i{font-style:normal;color:var(--bs-dim);letter-spacing:.16em}
+.bs-rec b{color:var(--bs-hi);margin-left:8px;letter-spacing:.04em}
+.bs-rec p{margin:6px 0 8px;color:var(--bs-ink)}
+.bs-rec u{display:inline-block;min-width:78px;text-decoration:none;color:var(--bs-lbl);
+  font-size:10px;letter-spacing:.18em}
+.bs-rec s{text-decoration:none;color:var(--bs-ink);font-size:10.5px}
+.bs-rec u,.bs-rec s,.bs-rec em{display:inline-block;vertical-align:top}
+.bs-rec s,.bs-rec em{width:calc(100% - 84px)}
+.bs-rec em{font-style:normal;font-size:10.5px;letter-spacing:.14em}
+/* never colour alone: the state is always a word as well */
+.bs-rec em.ok{color:var(--bs-ok)}
+.bs-rec em.bad{color:var(--bs-bad)}
+.bs-rec.dead{border-color:rgba(160,80,76,.3)}
+.bs-rec.dead b,.bs-rec.dead p,.bs-rec.dead s{color:#6d5a58}
+
+/* the activity log */
+.bs-log{max-width:620px;margin:0 auto;font-size:13px;line-height:2.2}
+.bs-log div{display:flex;justify-content:space-between;gap:20px;
+  border-bottom:1px solid rgba(160,140,136,.14)}
+.bs-log u{text-decoration:none;color:var(--bs-lbl);font-size:11px;letter-spacing:.18em}
+.bs-log s{text-decoration:none;color:var(--bs-hi);font-variant-numeric:tabular-nums}
+
+/* input 2 */
+.bs-dvr{max-width:640px;margin:0 auto;aspect-ratio:4/3;max-height:52vh;
+  border:1px solid rgba(160,140,136,.2);background:#050506;position:relative}
+.bs-dvr-lbl{position:absolute;top:10px;left:12px;font-size:10.5px;letter-spacing:.22em;color:var(--bs-lbl)}
+#bsBurn{position:absolute;right:12px;bottom:10px;text-align:right;font-size:10px;
+  line-height:1.7;color:#5d6b52;letter-spacing:.1em;white-space:pre}
+
+/* the tracking log and the channel */
+.bs-track{max-width:620px;margin:0 auto;font-size:12.5px;line-height:2;color:var(--bs-ok);white-space:pre-wrap}
+.bs-ch{max-width:620px;margin:0 auto;font-size:13px;line-height:2}
+.bs-ch b{display:block;color:var(--bs-hi);letter-spacing:.1em}
+.bs-ch s{display:block;text-decoration:none;color:#e6d7a8;text-shadow:0 0 10px rgba(230,215,168,.5)}
+.bs-ch p{margin-top:12px;color:var(--bs-lbl);font-size:11.5px;letter-spacing:.06em}
+
+/* the session readout, which fills the dead right half of the surface */
+#bsRead{
+  position:absolute;right:clamp(16px,5vw,64px);top:12vh;width:min(340px,38vw);
+  font-family:ui-monospace,'Cascadia Mono','Segoe UI Mono',Consolas,monospace;
+  font-size:11px;line-height:1.95;color:#c8bdb6;letter-spacing:.06em;white-space:pre;
+}
+#bsRead .k{color:#8a9a78}
+#bsRead .rule{color:#4a5c3a}
+#bsRead .foot{color:#8a9a78;letter-spacing:.1em}
+
+@media(max-width:900px){
+  .bs-recs{grid-template-columns:minmax(0,1fr);max-height:56vh}
+}
+@media(max-width:640px){
+  .bs-floor{padding-top:11vh}
+  .bs-hd b{letter-spacing:.04em}
+  .bs-rec{font-size:11px}
+  /* the readout stops competing with the mirror and sits under it */
+  #bsRead{position:static;width:auto;margin:14px auto 0;max-width:92vw;font-size:10px;white-space:normal}
+}
 
 /* ---- the mirror: a clone of his real hero, recolored into illness --------
    Not grayscale-invert (the clearest tell of a cheap job). His own violet and
@@ -934,7 +1072,9 @@ body.blacksite{background:#000}
   display:block;font-size:clamp(18px,3.4vw,30px);font-weight:800;letter-spacing:.3em;
   color:#9fb0b8;text-shadow:0 0 12px rgba(159,176,184,.5);
 }
-#bsSlate span{display:block;margin-top:12px;font-size:12px;letter-spacing:.24em;color:#4d5c63}
+/* #4d5c63 on this background measured ~2.6:1, under AA for the one line that
+   explains what the slate is. Lifted, kept cold. */
+#bsSlate span{display:block;margin-top:12px;font-size:12px;letter-spacing:.24em;color:#7d8f97}
 #bsSlate .bars{display:flex;gap:0;width:min(420px,70vw);height:52px;margin:22px auto 0;opacity:.55}
 #bsSlate .bars i{flex:1}
 
@@ -955,6 +1095,12 @@ body.blacksite{background:#000}
 #bsTerm .err{color:#c2564f}
 #bsTerm .him{color:#d9c3bf;text-shadow:0 0 8px rgba(190,60,90,.45)}
 #bsTerm .dim{color:#4a5c3a}
+/* the archive's own voice. Institutional and calm, because the format staying
+   calm while the content is not is the whole trick. */
+#bsTerm .sys{color:#8fa87a}
+/* the presence. It never speaks, it writes, so this is deliberately plain
+   output with no prompt, no glow and no attribution. */
+#bsTerm .raw{color:#9a8f8c}
 #bsTerm .cur{display:inline-block;width:7px;height:13px;background:#7f9c6b;vertical-align:-2px;animation:bsCur 1s steps(1) infinite}
 @keyframes bsCur{50%{opacity:0}}
 /* the one line worth finding */
@@ -976,6 +1122,14 @@ body.blacksite{background:#000}
 .blacksite .bs-exit{background:rgba(10,4,8,.72);border-color:rgba(210,200,196,.45);color:#efe6e2}
 .blacksite .bs-exit:focus-visible{outline:2px solid #fff;outline-offset:3px}
 
+/* The absence. Three times the picture stutters on a four count, and the fourth
+   time nothing happens at all: every loop stops, the grain goes, the REC light
+   freezes mid-blink, and only the timecode keeps moving so you know it did not
+   crash. This is the one beat that is identical under reduced motion, because
+   taking things away is not motion. */
+.bs-hold #bsLayer *,.bs-hold .mascot .pose,.bs-hold #mHum,.bs-hold #bsOsd .rec{animation-play-state:paused!important}
+.bs-hold #bsPost{opacity:0}
+
 /* the way out: a CRT powering down */
 .bs-off #bsLayer,.bs-off .mascot{animation:bsOff .3s steps(1) forwards}
 @keyframes bsOff{
@@ -987,6 +1141,14 @@ body.blacksite{background:#000}
   position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:61;
   background:rgba(24,19,40,.55);border:1px solid var(--border);color:#c9c4e4;border-radius:999px;
   padding:9px 16px;font-size:12.5px;font-weight:600;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+/* bsFlick dips to opacity .2, and it used to run on the button itself, so the
+   one guaranteed way out of the mode fell to roughly 2:1 several times a minute.
+   The flicker now lives on a glow bleeding out from behind the label: the tube
+   still stutters, the exit never does. */
+.bs-exit::before{
+  content:'';position:absolute;inset:-9px;border-radius:999px;pointer-events:none;
+  background:radial-gradient(62% 150% at 50% 50%,rgba(224,214,210,.22),transparent 72%);
   animation:bsFlick 5s linear infinite;
 }
 .bs-exit:hover{border-color:var(--accent-line);color:var(--text)}
@@ -1966,6 +2128,11 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 
 </div><!-- /shell -->
 
+<!-- The descent runway. .shell is collapsed to one viewport while he has the
+     page, so without this the document would be one screen tall and there would
+     be nothing to scroll. JS sets the height in pixels. -->
+<div id="bsRail" aria-hidden="true"></div>
+
 <!-- command palette -->
 <dialog id="palDlg" aria-label="Command palette">
   <div class="dlg">
@@ -2011,8 +2178,105 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
      cloned in at runtime and only the clone is corrupted, so no garbled text
      can ever reach the accessibility tree. Inert until he takes the page. -->
 <div id="bsLayer" aria-hidden="true" inert>
-  <div id="bsGhost"></div>
-  <div id="bsMirror"></div>
+  <!-- The floors. The stage is position:fixed, so these do not scroll with the
+       document: they read the scroll and move themselves off one custom
+       property, which keeps seven full-viewport panels at one style write per
+       frame instead of a scroll-linked reflow.
+       Everything here is authored rather than cloned. The work cards carry
+       multi-kilobyte inline base64 webp, and cloning six of them across seven
+       floors would be megabytes of decoded bitmap for a decorative layer.
+       Every factual line below is compressed from the real cards above and adds
+       nothing to them. The unfinished project is filed under ./building, not
+       ./built, because the real page calls it "currently also building". -->
+  <div id="bsFloors">
+
+    <div class="bs-floor" style="--f:0" data-floor="0">
+      <div id="bsGhost"></div>
+      <div id="bsMirror"></div>
+      <div id="bsRead"></div>
+    </div>
+
+    <div class="bs-floor" style="--f:1" data-floor="1">
+      <div class="bs-hd"><i>SECTOR 09-17</i><b>./built</b>
+        <span>6 RECORDS RECOVERED. 1 RECORD WILL NOT OPEN.</span></div>
+      <div class="bs-recs">
+        <div class="bs-rec"><i>01</i><b>snapwyrm/</b>
+          <p>provably-fair arcade platform, built end to end, solo. react, cloudflare pages
+             functions, d1 sql, realtime multiplayer blackjack, accounts, admin ops dashboard,
+             payments, compliance gates.</p>
+          <u>HOST</u><s>snapwyrm.com</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>02</i><b>offsiteai/</b>
+          <p>an ai worker for contracting businesses. answers customer questions, gives instant
+             estimates, books appointments on the site, 24/7.</p>
+          <u>HOST</u><s>offsiteai.io</s><u>NOTE</u><s>built with a partner. this one he did not do alone.</s>
+          <u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>03</i><b>minesweeper/</b>
+          <p>a minesweeper game in lua. 1,000+ member community, cross-platform account linking,
+             site roles and badges syncing in-game through a secured api.</p>
+          <u>HOST</u><s>roblox.com</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>04</i><b>bots/</b>
+          <p>economy, tickets, moderation, giveaways, roles, ai auto-reply. multiple bots in real
+             servers, one wired into a live web economy with audited transfers.</p>
+          <u>HOST</u><s>production</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>05</i><b>streams/</b>
+          <p>tiktok live pipelines. chat-to-game triggers, gift and like events driving overlays
+             and goals, account-growth automations.</p>
+          <u>HOST</u><s>live</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>06</i><b>dom/</b>
+          <p>electron desktop app. licensing, per-machine binding, add-on account slots, sold and
+             fulfilled automatically through the same backend.</p>
+          <u>HOST</u><s>shipped</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec dead" id="bsRec7"><i>07</i><b>██████/</b>
+          <p>██████ ███ ██ ████,
+             ██████ ██ ███, ████.</p>
+          <u>HOST</u><s>██████</s><u>INTEGRITY</u><em class="bad" id="bsRec7s">FAILED</em></div>
+      </div>
+    </div>
+
+    <div class="bs-floor" style="--f:2" data-floor="2">
+      <div class="bs-hd"><i>SECTOR 18-26</i><b>./logs</b>
+        <span>ACTIVITY ON RECORD.</span></div>
+      <!-- Every number here is read live from the same /api/contributions the
+           proof section uses. Hard-coding them would make the page lie the next
+           time he commits. If the read failed they stay redacted, which is both
+           on theme and the honest failure mode. -->
+      <div class="bs-log">
+        <div><u>lines on record</u><s id="bsLgTotal">████</s></div>
+        <div><u>days not empty</u><s id="bsLgActive">██ of ███</s></div>
+        <div><u>first record</u><s id="bsLgFirst">████-██-██</s></div>
+        <div><u>heaviest day</u><s id="bsLgBusy">███</s></div>
+        <div><u>heaviest week</u><s id="bsLgWeek">███</s></div>
+      </div>
+    </div>
+
+    <div class="bs-floor" style="--f:3" data-floor="3">
+      <div class="bs-hd"><i>SECTOR 27-35</i><b>./mirror</b>
+        <span>INPUT 2. NO SIGNAL. RECORDING ANYWAY.</span></div>
+      <div class="bs-dvr"><span class="bs-dvr-lbl">INPUT 2</span><div id="bsBurn"></div></div>
+    </div>
+
+    <!-- ./quiet has no caption. That is the point. -->
+    <div class="bs-floor" style="--f:4" data-floor="4">
+      <div class="bs-hd"><i>SECTOR 36-41</i><b>./quiet</b></div>
+    </div>
+
+    <div class="bs-floor" style="--f:5" data-floor="5">
+      <div class="bs-hd"><i>SECTOR 42-50</i><b>./after</b></div>
+      <pre class="bs-track" id="bsTrackLog"></pre>
+    </div>
+
+    <div class="bs-floor" style="--f:6" data-floor="6">
+      <div class="bs-hd"><i>SECTOR 51-58</i><b>./channel</b>
+        <span>END OF VOLUME.</span></div>
+      <div class="bs-ch">
+        <b>58.txt</b>
+        <s>subject: channel 58</s>
+        <s>husky@snapwyrm.com</s>
+        <p>one record in this sector. it is not a project. it is a way to reach him.</p>
+      </div>
+    </div>
+
+  </div>
   <canvas id="bsPost"></canvas>
   <pre id="bsTerm"></pre>
   <div id="bsOsd">
@@ -2032,6 +2296,16 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       </div>
     </div>
   </div>
+</div>
+
+<!-- Focus parks here while he has the page, not on the exit button: Space is
+     how a keyboard visitor scrolls, and on a focused button Space activates it,
+     which threw them out of the mode the moment they tried to descend.
+     Neither this nor the log inside it is inert or aria-hidden, so together they
+     are the accessible route through a descent whose stage is decoration. -->
+<div id="bsPilot" class="sr" tabindex="-1" role="group" hidden
+     aria-label="Recovered session. Page Down descends, Page Up returns. Escape restores the portfolio at any time.">
+  <div id="bsNarr" role="region" aria-label="Recovered session log"></div>
 </div>
 
 <button id="bsMute" class="bs-mute" type="button" hidden>sound: on</button>
@@ -2651,6 +2925,11 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
        the palette is also a guaranteed keyboard and screen-reader way out. */
     var DARK_CMDS = [
       { g: 'signal', l: 'Turn on the light', k: 'exit escape leave restore quit out', run: function () { if (window.__bsExit) window.__bsExit(); } },
+      /* the descent has to be operable without a wheel or a pointer, and the
+         records have to be reachable by someone who cannot see the stage */
+      { g: 'signal', l: 'Go deeper', k: 'down descend next sector floor', run: function () { if (window.__bsDescend) window.__bsDescend(1); } },
+      { g: 'signal', l: 'Go back up', k: 'up back previous return surface', run: function () { if (window.__bsDescend) window.__bsDescend(-1); } },
+      { g: 'signal', l: 'Read the recovered files', k: 'work projects built portfolio records', run: function () { if (window.__bsGoto) window.__bsGoto(1); } },
       { g: 'signal', l: 'r̸e̸s̸t̸o̸r̸e̸ ̸b̸r̸o̸a̸d̸c̸a̸s̸t̸', k: 'nothing', run: function () { if (window.__bsExit) window.__bsExit(); } },
       { g: 'signal', l: 'ask him to leave', k: 'please stop', run: function () { if (window.__bsExit) window.__bsExit(); } },
       { g: 'signal', l: 'CH 58 // open the channel', k: 'channel 58 secret hidden', run: function () { if (window.__bsReveal) window.__bsReveal(); } },
@@ -3054,7 +3333,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     /* ---- MascotFX (his engine, verbatim behavior) ---- */
     var FX = {};
     (function () {
-      var bgC, fgC, bg, fg, W, H, fxTier = 0, fxBlack = false;
+      var bgC, fgC, bg, fg, W, H, fxTier = 0, fxBlack = false, beatIv = 1500;
       var parts = [], bolts = [], lastBeat = 0, beatHook = null, staticN = 0, ac, prev = 0;
       var EY = [[.363, .518], [.637, .518]];
       var R = function (a, b) { return a + Math.random() * (b - a); };
@@ -3085,6 +3364,10 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       FX.setTier = function (t) { fxTier = t; if (t < 5) bolts = []; };
       FX.setBlack = function (b) { fxBlack = b; parts = []; bolts = []; size(); };
       FX.setBeatHook = function (f) { beatHook = f; };
+      /* the blacksite's director drives the tempo of the heartbeat, which used
+         to be a hard 1500ms and was therefore the same in the first ten seconds
+         as it was at the climax */
+      FX.setBeatInterval = function (ms) { beatIv = Math.max(200, ms | 0); };
       FX.audio = function () { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (ac && ac.state === 'suspended') ac.resume(); };
       function tone(f0, f1, dur, type, vol, lp) { if (!ac) return; var t0 = ac.currentTime, o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t0); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur); g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(.0008, t0 + dur); var n = o; if (lp) { var f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; o.connect(f); n = f; } n.connect(g); g.connect(ac.destination); o.start(t0); o.stop(t0 + dur + .05); }
       FX.thump = function () { tone(52, 36, .2, 'sine', .2); setTimeout(function () { tone(48, 34, .16, 'sine', .12); }, 170); };
@@ -3146,7 +3429,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         if (motionOK) { spawn(); for (var i = 0; i < parts.length; i++) step(parts[i], dt); parts = parts.filter(function (p) { return p.life > 0 && p.y > -30 && p.y < H + 40; }); }
         FX.eyeStep(now);
         draw(now);
-        var iv = fxBlack ? 1500 : fxTier >= 6 ? 480 : fxTier >= 5 ? 640 : fxTier >= 4 ? 860 : 0;
+        var iv = fxBlack ? beatIv : fxTier >= 6 ? 480 : fxTier >= 5 ? 640 : fxTier >= 4 ? 860 : 0;
         if (iv && now - lastBeat > iv) { lastBeat = now; FX.thump(); if (beatHook) beatHook(); } }
       FX.lightning = function () { if (!motionOK) return; FX.hiss();
         var n = 2 + (Math.random() * 2 | 0);
@@ -3305,7 +3588,12 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       /* one stable sentence, never the corrupted text */
       live.textContent = 'Portfolio hidden by an interactive effect. Press Escape to restore.';
       doc.dispatchEvent(new CustomEvent('snapwyrm:blacksite', { detail: { calm: !!calm } }));
-      try { bsExit.focus({ preventScroll: true }); } catch (e) {} }
+      /* Focus goes to the pilot, not to the exit. Space is how a keyboard
+         visitor scrolls, and with focus parked on a button Space activates it,
+         so the old version threw them straight back out of the mode the first
+         time they tried to descend. mount() has already unhidden it by now. */
+      var pil = doc.getElementById('bsPilot');
+      try { (pil || bsExit).focus({ preventScroll: true }); } catch (e) {} }
     var offT = null;
     function exitBlacksite() { if (!black) return; black = false;
       clearTimeout(offT);
@@ -3317,7 +3605,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         /* if he took the page again during the collapse, this teardown belongs
            to the previous session and must not strip the new one */
         if (black) { doc.body.classList.remove('bs-off'); return; }
-        doc.body.classList.remove('blacksite', 'bs-off', 'bs-slate', 'bs-tear', 'bs-roll');
+        doc.body.classList.remove('blacksite', 'bs-off', 'bs-slate', 'bs-tear', 'bs-roll', 'bs-hold');
         FX.setBlack(false); doc.body.style.filter = ''; aura.style.opacity = 0;
         heat = 0; var p = tier; tier = 0; bsExit.hidden = true; atmo.resume(); applyTier(p || 1);
         live.textContent = 'The light is back.';
@@ -3458,7 +3746,15 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       if (ctrl) setTimeout(function () { ctrl.abort(); }, 4500);
       fetch('/api/contributions', { signal: ctrl && ctrl.signal })
         .then(function (r) { if (!r.ok) throw 0; return r.json(); })
-        .then(function (d) { render(d, true); })
+        .then(function (d) {
+          /* Published for the blacksite's ./logs floor, and ONLY on this path.
+             The baked fallback is a snapshot and goes stale the next time he
+             commits, so the descent would be quoting numbers that are no longer
+             true. With nothing published it renders the figures redacted
+             instead, which is on theme and is the honest failure mode. */
+          window.__contrib = d;
+          render(d, true);
+        })
         .catch(fallback);
     };
     if ('requestIdleCallback' in window) requestIdleCallback(kick, { timeout: 2500 });
@@ -3544,17 +3840,50 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     var post = doc.getElementById('bsPost'), term = doc.getElementById('bsTerm');
     var tcEl = doc.getElementById('bsTc'), trackEl = doc.getElementById('bsTrack');
     var muteBtn = doc.getElementById('bsMute');
+    var readEl = doc.getElementById('bsRead');
+    /* Neither of these is inside the stage. #bsPilot is what actually holds
+       focus while he has the page, and #bsNarr is the clean reading of the
+       descent for anyone who cannot see it. */
+    var pilot = doc.getElementById('bsPilot'), narr = doc.getElementById('bsNarr');
+
+    /* ---- the mascot's ears, permanently ----------------------------------
+       He is position:fixed while he has the page, so any ancestor with a
+       transform, filter, contain, backdrop-filter or will-change silently
+       becomes his containing block: he then gets measured against that box
+       instead of the viewport, scrolls away with the document, and his ears get
+       clipped. That has now happened twice from two different ancestors (the
+       hero parallax, and again after the v3 design pass), and neutralising each
+       new culprit with transform:none is a game we would keep losing every time
+       someone adds a layer above him.
+       So while he owns the page he is not in the layout at all: he moves to
+       <body>, where there is nothing above him to inherit a containing block
+       from, and goes back exactly where he came from on the way out. */
+    var mBtn = doc.getElementById('mascotBtn'), mHome = null, mNext = null;
+    function liftMascot() {
+      if (!mBtn || mHome) return;
+      mHome = mBtn.parentNode; mNext = mBtn.nextSibling;
+      doc.body.appendChild(mBtn);
+    }
+    function dropMascot() {
+      if (!mBtn || !mHome) return;
+      /* nextSibling, not appendChild: he sits between the hero copy and the end
+         of the grid, and appending would put him after everything */
+      mHome.insertBefore(mBtn, mNext);
+      mHome = null; mNext = null;
+    }
     var body = doc.body;
 
     var on = false, calm = false, t0 = 0, glyphs = [], tiles = [], ctx = null;
-    var intensity = 0, target = 0, dwell = 0, frame = 0, lastGlyph = 0, nextEvent = 0;
+    /* intensity and dwell are derived by the director now, but they keep their
+       names because every consumer below reads them */
+    var intensity = 0, dwell = 0, frame = 0, lastGlyph = 0, nextEvent = 0;
     var muted = false;
 
     /* The mascot owns the audio and particle engine. Bind it defensively: if it
        is ever missing, the blacksite must degrade to a silent picture rather
        than throw inside the frame loop and take the whole mode down with it. */
     var FX = window.__MFX || {};
-    ['audio', 'hiss', 'growl', 'boom', 'thump', 'staticBurst', 'lightning', 'burstEmbers', 'setDrone', 'setBlack', 'tick', 'windup', 'look', 'eyeStep']
+    ['audio', 'hiss', 'growl', 'boom', 'thump', 'staticBurst', 'lightning', 'burstEmbers', 'setDrone', 'setBlack', 'tick', 'windup', 'look', 'eyeStep', 'setBeatInterval']
       .forEach(function (k) { if (typeof FX[k] !== 'function') FX[k] = function () {}; });
 
     /* ---- flash governor: nothing may strobe. Photosensitivity is a real
@@ -3722,6 +4051,12 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       if (store.get('hsw-seen')) lines.push('You have been here before. He remembers the shape of you.');
       var pick = lines[(Math.random() * lines.length) | 0];
       sub.textContent = pick;
+      /* That assignment just detached every cell buildMirror had already
+         collected for .sub, but they were still sitting in glyphs[], so decay
+         spent a share of its budget every pass mutating orphans and the visible
+         corruption came out thinner than the numbers said it should. The
+         isConnected prune only ran on an ALT restore, which is rare. */
+      glyphs = glyphs.filter(function (g) { return g.isConnected; });
       /* re-wrap the replaced line so it decays like the rest */
       var frag = doc.createDocumentFragment();
       for (var i = 0; i < pick.length; i++) {
@@ -3788,12 +4123,325 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     }
     var frozen = false;
 
+    /* ==================================================================
+       THE DESCENT
+       .shell is collapsed to one viewport while he has the page, and #bsRail
+       supplies the document height instead, so the runway is exactly as deep
+       as we say rather than as deep as his portfolio happens to be.
+       The stage itself stays position:fixed and the floors read the scroll and
+       move themselves. That is what keeps seven full-viewport panels at one
+       style write per frame instead of a scroll-linked reflow, and it is also
+       what keeps the descent reachable: an inert subtree cannot be scrolled by
+       keyboard, but the viewport is not inside that subtree, so ordinary
+       document scrolling still works and Page Down still means something.
+       ================================================================== */
+    var FLOORS = 7;
+    var rail = doc.getElementById('bsRail');
+    var floorEls = [], depth = 0, depthT = 0, curFloor = -1;
+    var savedScroll = 0, railPx = 0, userScrolled = false, lastRailW = 0, lastRailH = 0;
+    var dirDepth = 0, lastFloorWrite = 0, lastDepthT = 0;
+
+    function sizeRail() {
+      /* Pixels, never vh. On a phone the URL bar hides and shows, vh changes
+         under you mid-scroll, and the depth reading jitters with it. Recomputed
+         only on a major resize, using the same test the atmosphere already uses
+         for the same reason. */
+      railPx = Math.round(innerHeight * (FLOORS - 1));
+      if (rail) rail.style.height = railPx + 'px';
+      lastRailW = innerWidth; lastRailH = innerHeight;
+    }
+    function onRailResize() {
+      if (innerWidth === lastRailW && Math.abs(innerHeight - lastRailH) < 180) return;
+      /* keep the visitor on the floor they were on, not the pixel they were at:
+         the pixel means something different once the rail has been remeasured */
+      var f = depthT;
+      sizeRail();
+      scrollTo(0, Math.round(f * innerHeight));
+      sizePost();
+    }
+    function onScroll() { userScrolled = true; }
+
+    function descentStep(now) {
+      depthT = userScrolled
+        ? Math.min(FLOORS - 1, Math.max(0, scrollY / Math.max(1, innerHeight)))
+        : dirDepth;
+      /* Under reduced motion the camera does not glide, it cuts, and the write
+         is throttled so a floor change is a state change rather than motion. */
+      if (calm || reduced) {
+        if (now - lastFloorWrite < 250 && Math.abs(depth - depthT) > .001) return;
+        depth = depthT;
+        lastFloorWrite = now;
+      } else {
+        /* Frame-rate independent, and not just for tidiness: this same function
+           runs at 60Hz off the frame loop and at 4Hz off the fallback pump when
+           rAF is throttled. A flat per-call 0.12 would take fifteen times longer
+           to arrive on the slow path, so the camera would visibly crawl behind
+           the story on exactly the machines least able to afford it. */
+        var dt = lastDepthT ? Math.min(250, now - lastDepthT) : 16.7;
+        depth += (depthT - depth) * (1 - Math.pow(.88, dt / 16.7));
+      }
+      lastDepthT = now;
+      layer.style.setProperty('--bsD', depth.toFixed(4));
+
+      var f = Math.round(depth);
+      if (f !== curFloor) {
+        curFloor = f;
+        /* Only two floors are ever on camera. Toggled on the crossing, never
+           per frame: this is a visibility write, and doing it every frame would
+           cost more than the panels it is saving. */
+        for (var i = 0; i < floorEls.length; i++) {
+          var far = Math.abs(i - depth) > 1.5;
+          floorEls[i].classList.toggle('far', far);
+        }
+        playFloor(f);
+        if (f > 0) announce('Sector ' + SECTORS[f] + '. ' + FLOOR_NAMES[f] + '.');
+      }
+    }
+    var SECTORS = ['00', '09', '18', '27', '36', '42', '51'];
+    var FLOOR_NAMES = ['surface', 'built', 'logs', 'mirror', 'quiet', 'after', 'channel'];
+
+    /* A keyboard visitor descends a floor at a time rather than by wheel
+       distance, which is both easier and better paced. */
+    function descendTo(f) {
+      f = Math.max(0, Math.min(FLOORS - 1, f));
+      userScrolled = true;
+      scrollTo(0, Math.round(f * innerHeight));
+    }
+    function onDescendKey(e) {
+      if (!on || e.altKey || e.ctrlKey || e.metaKey) return;
+      /* Escape is never touched here. It is the guaranteed way out and the
+         handler that owns it must keep seeing it. */
+      var here = Math.round(depthT);
+      if (e.key === 'PageDown') { e.preventDefault(); descendTo(here + 1); }
+      else if (e.key === 'PageUp') { e.preventDefault(); descendTo(here - 1); }
+      else if (e.key === 'End') { e.preventDefault(); descendTo(FLOORS - 1); }
+      else if (e.key === 'Home') { e.preventDefault(); descendTo(0); }
+    }
+
+    /* ==================================================================
+       THE DIRECTOR
+       There used to be three clocks running against each other: this module's
+       target/intensity easing, a second hidden 90 second ramp inside dwell, and
+       the mascot's fixed 1500ms heartbeat. They disagreed, so the arc never
+       resolved and the mode read as a loop.
+       One owner now. tension is the arc and only the beat table writes it,
+       pulse is the heartbeat transient, generation is monotonic session damage.
+       intensity and dwell survive as DERIVED values under their original names,
+       so glyph decay, the chroma split, the intrusion cadence, the tracking bar
+       and the grain alpha all keep working without being touched.
+       ================================================================== */
+    var tension = 0, pulse = 0, generation = 0;
+    var beatI = -1, beatT0 = 0, dirTimers = [], dirPump = 0, lastTick = 0;
+
+    /* dur is the ceiling, min is the floor a depth gate cannot undercut, at is
+       the depth that pulls the beat early, locked means depth cannot touch it.
+       Invariant: scroll can only ever pull a beat EARLIER, never later, and it
+       can never skip one. preswell is locked because the audio it schedules has
+       to land on the collapse, so its length has to be known in advance. */
+    var BEATS = [
+      { id: 'signon',     dur: 6000,  min: 3000, ten: .12 },
+      { id: 'establish',  dur: 22000, min: 8000, at: .06, ten: .15 },
+      { id: 'pattern_a',  dur: 14000, min: 6000, at: .20, ten: .30, iv: 1500, floor: 1 },
+      { id: 'pattern_b',  dur: 12000, min: 6000, at: .35, ten: .42, iv: 1250, floor: 2 },
+      { id: 'absence',    dur: 3200,  min: 3200, ten: .42, hush: true },
+      { id: 'nearmiss',   dur: 5000,  min: 5000, ten: .50 },
+      { id: 'it_knows',   dur: 12000, min: 5000, at: .50, ten: .55, floor: 3 },
+      { id: 'complicity', dur: 16000, min: 4000, at: .65, ten: .60, floor: 4 },
+      { id: 'hold',       dur: 18000, min: 8000, at: .80, ten: .62, iv: 900, floor: 5 },
+      { id: 'preswell',   dur: 6000,  min: 6000, ten: .95, locked: true, floor: 6 },
+      { id: 'collapse',   dur: 4000,  min: 4000, ten: 1,   locked: true, iv: 640 },
+      { id: 'poweroff',   dur: 1400,  min: 1400, ten: 1,   locked: true }
+    ];
+
+    /* ac.currentTime, not performance.now, because every audio ramp in wave 2
+       is scheduled against it. Two clocks drift apart over a two minute arc and
+       the soundtrack stops landing on the picture. */
+    function dirNow() {
+      var ac = FX.audio && FX.audio();
+      return ac && ac.currentTime ? ac.currentTime * 1000 : performance.now();
+    }
+    function dirEnter(i, now) {
+      beatI = i; beatT0 = now;
+      var b = BEATS[i];
+      if (!b) return;
+      if (b.iv && FX.setBeatInterval) FX.setBeatInterval(b.iv);
+      /* A beat that owns a floor takes a visitor who has not scrolled down to
+         it. Once they scroll they own the camera and the director lets go. */
+      if (b.floor != null && b.floor > dirDepth) dirDepth = b.floor;
+      if (b.hush) hush(true);
+      if (b.id === 'poweroff') { exitBlacksite(); return; }
+    }
+    function dirStep(now) {
+      if (beatI < 0) return;
+      var b = BEATS[beatI];
+      if (!b) return;
+      var el = now - beatT0;
+      tension += ((b.ten || 0) - tension) * .04;
+      if (b.hush && el > b.dur) hush(false);
+      var pull = !b.locked && b.at && depth >= b.at && el >= b.min;
+      if (el >= b.dur || pull) {
+        if (beatI + 1 < BEATS.length) dirEnter(beatI + 1, now);
+      }
+    }
+    function dirStart() {
+      var now = dirNow();
+      tension = 0; pulse = 0; generation = 0; dirDepth = 0;
+      dirEnter(0, now);
+      /* rAF does not fire in a hidden tab, but the tape is supposed to keep
+         running while you are away: that is the whole point of the beat where
+         you come back and time has passed. The director reads an absolute
+         clock, so one step on return catches the entire gap up in a single
+         call, however long the interval was throttled to.
+         This also carries the descent, which matters for more than hidden tabs:
+         a throttled or occluded window still runs timers while rAF is starved,
+         and without this the arc would keep advancing underneath a picture that
+         had silently frozen. It only fires when the frame loop has actually
+         gone quiet, so a healthy page never double-steps. */
+      dirPump = setInterval(function () {
+        if (!on) return;
+        var n = performance.now();
+        if (n - lastTick < 200) return;
+        lastTick = n;
+        dirStep(dirNow());
+        descentStep(n);
+      }, 250);
+    }
+    function dirStop() {
+      clearInterval(dirPump); dirPump = 0; beatI = -1;
+      dirTimers.forEach(clearTimeout); dirTimers = [];
+      hush(false);
+    }
+    /* wave 2 owns the real version of this on the audio master bus. For now it
+       freezes the picture, which is the half of the beat that does not need a
+       gain node: every CSS loop stops and only the timecode keeps moving. */
+    function hush(v) { doc.body.classList.toggle('bs-hold', !!v); }
+
+    /* ---- the screen reader's copy of the descent -------------------------
+       The stage is aria-hidden decoration, so everything readable has to be
+       mirrored out to a region that is not. Rows carry a clean reading and the
+       defiled text never comes near this. */
+    function narrate(t) {
+      if (!narr || !t) return;
+      var p = doc.createElement('p');
+      p.textContent = t;
+      narr.appendChild(p);
+    }
+    var lastSaid = 0;
+    function announce(t) {
+      /* the live region is for structure, not for atmosphere: floor changes and
+         the payoff only, and never closer together than four seconds */
+      var n = performance.now();
+      if (n - lastSaid < 4000) return;
+      lastSaid = n; live.textContent = t;
+    }
+
+    /* ---- the session readout: what the browser already knew ----------------
+       Every value here is something the page could read without asking
+       permission for anything, and none of it goes anywhere. The closing line
+       is the point of the whole block: it turns a creepy surveillance beat into
+       a statement about how the site is built, and it is verifiably true. */
+    function buildReadout() {
+      if (!readEl) return;
+      var ref = 'TYPED OR BOOKMARKED';
+      try {
+        if (doc.referrer) {
+          var h = new URL(doc.referrer).hostname;
+          /* hostname only. A full referrer can carry a path and a query string,
+             and putting someone's search terms on screen is a different and
+             much worse thing than naming the site they came from. */
+          ref = (h === location.hostname) ? 'SAME VOLUME' : h.toUpperCase();
+        }
+      } catch (e) {}
+      var zone = 'UNRESOLVED';
+      try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone.toUpperCase(); } catch (e) {}
+      var rows = [
+        ['ORIGIN', ref],
+        ['LOCALE', (navigator.language || 'UNSET').toUpperCase()],
+        ['ZONE', zone],
+        ['PANEL', (screen.width || '?') + ' x ' + (screen.height || '?')],
+        ['THREADS', navigator.hardwareConcurrency || 'UNREPORTED'],
+        ['POINTER', finePtr ? 'FINE' : 'COARSE'],
+        /* the setting is read back to the visitor rather than silently
+           downgrading them, which makes the accessibility path part of the
+           fiction instead of a lesser version of it */
+        ['MOTION', reduced ? 'REDUCED, HONOURED' : 'FULL'],
+        ['SESSION', ('0' + visitNo()).slice(-2)],
+        ['LAST SEEN', lastSeen()]
+      ];
+      var html = '<span class="k">SESSION READOUT</span>\n<span class="rule">' +
+        new Array(34).join('-') + '</span>\n';
+      rows.forEach(function (r) {
+        html += '<span class="k">' + (r[0] + new Array(14).join(' ')).slice(0, 13) + '</span>' + r[1] + '\n';
+      });
+      html += '<span class="rule">' + new Array(34).join('-') + '</span>\n' +
+        '<span class="foot">NOTHING IN THIS BLOCK LEFT YOUR BROWSER.</span>';
+      readEl.innerHTML = html;
+    }
+    function visitNo() {
+      var n = (parseInt(store.get('hsw-bs-n'), 10) || 0) + 1;
+      store.set('hsw-bs-n', String(n));
+      return n;
+    }
+    function lastSeen() {
+      var last = store.get('hsw-bs-last');
+      store.set('hsw-bs-last', new Date().toISOString());
+      if (!last) return 'NO PRIOR RECORD';
+      var then = new Date(last), mins = Math.floor((Date.now() - then.getTime()) / 60000);
+      if (isNaN(mins) || mins < 0) return 'NO PRIOR RECORD';
+      var when = mins < 60 ? mins + ' MINUTES AGO'
+        : mins < 1440 ? Math.floor(mins / 60) + ' HOURS AGO'
+        : Math.floor(mins / 1440) + ' DAYS AGO';
+      var hh = ('0' + then.getHours()).slice(-2) + ':' + ('0' + then.getMinutes()).slice(-2);
+      var verdicts = { esc: 'YOU PRESSED ESCAPE.', end: 'YOU STAYED TO THE END.', left: 'YOU LEFT IT RUNNING.' };
+      return when + '. ENDED ' + hh + '. ' + (verdicts[store.get('hsw-bs-exit')] || 'YOU CLOSED IT.');
+    }
+
+    /* ---- ./logs, read live or not at all --------------------------------
+       Hard-coding these would make the descent quote numbers that stop being
+       true the next time he commits. The proof section publishes the payload
+       only when the network read actually succeeded, so if it is missing the
+       figures stay redacted rather than stale. */
+    function fillLog() {
+      var d = window.__contrib;
+      if (!d || !d.days || typeof d.total !== 'number') return;
+      var keys = Object.keys(d.days).sort(), first = null, active = 0, busy = 0;
+      keys.forEach(function (k) {
+        var n = d.days[k] || 0;
+        if (n > 0) { if (!first) first = k; active++; if (n > busy) busy = n; }
+      });
+      if (!first) return;
+      var win = keys.filter(function (k) { return k >= first; });
+      var week = 0;
+      for (var i = 0; i < win.length; i++) {
+        var s = 0;
+        for (var j = i; j < i + 7 && j < win.length; j++) s += d.days[win[j]] || 0;
+        if (s > week) week = s;
+      }
+      var set = function (id, v) { var e = doc.getElementById(id); if (e) e.textContent = v; };
+      set('bsLgTotal', d.total.toLocaleString('en-US'));
+      set('bsLgActive', active + ' of ' + win.length);
+      /* "first record", not "first activity": this is where the dataset starts,
+         not where he started. He is self-taught and has work older than it. */
+      set('bsLgFirst', first);
+      set('bsLgBusy', busy);
+      set('bsLgWeek', week);
+    }
+
     /* ---- the frame. Early-returns unless we are actually black. ---- */
     function tick(dt, now) {
-      if (!on || calm || doc.hidden) return;
-      intensity += (target - intensity) * .06;
-      target *= .92;
-      dwell = Math.min(1, (now - t0) / 90000);
+      if (!on) return;
+      lastTick = performance.now();
+      dirStep(dirNow());
+      descentStep(now);
+      if (calm || doc.hidden) return;
+      /* intensity and dwell are derived here and nowhere else. Everything
+         downstream still reads them by their original names. */
+      pulse *= .92;
+      intensity += ((tension * .72 + pulse * .34 * tension + generation * .12) - intensity) * .12;
+      if (intensity > 1) intensity = 1;
+      dwell = BEATS.length > 1 ? Math.max(0, beatI) / (BEATS.length - 1) : 0;
+      generation += dt * .00004 + dt * .00012 * tension;
+      if (generation > 1) generation = 1;
       frame++;
 
       decay(now);
@@ -3827,87 +4475,210 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     }
 
     /* ---- mount / unmount ---- */
+    /* Bumped on every mount. Deferred work captures it and bails if it no
+       longer matches, which is strictly stronger than checking `on`: that only
+       catches a wipe landing on a live session, not an exit, re-entry and
+       second exit interleaving, where a stale timer fires while `on` is false
+       for a different reason than the one it was scheduled under. */
+    var session = 0;
     function mount(isCalm) {
-      calm = !!isCalm; on = true; t0 = performance.now();
-      frame = 0; intensity = calm ? .25 : .6; target = calm ? 0 : 1; dwell = 0;
+      calm = !!isCalm; on = true; t0 = performance.now(); session++;
+      frame = 0; intensity = calm ? .25 : .35; dwell = 0;
       nextEvent = t0 + 4000;
       layer.removeAttribute('inert'); layer.setAttribute('aria-hidden', 'true');
       var shell = doc.querySelector('.shell');
       if (shell) shell.setAttribute('inert', '');
+      /* out of the layout before anything measures him */
+      liftMascot();
+
+      /* the descent takes the document scroll over, so put it back exactly
+         where it was on the way out. Without this a visitor who went all the
+         way down returns to the bottom of the footer, which reads as broken. */
+      savedScroll = scrollY;
+      doc.documentElement.style.scrollBehavior = 'auto';
+      floorEls = [].slice.call(doc.querySelectorAll('.bs-floor'));
+      depth = 0; depthT = 0; curFloor = -1; userScrolled = false; dirDepth = 0;
+      lastDepthT = 0; lastFloorWrite = 0; lastTick = 0;
+      sizeRail();
+      scrollTo(0, 0);
+      addEventListener('scroll', onScroll, { passive: true });
+
       buildMirror();
       personalize(window.__bsClicks || 24);
+      buildReadout();
+      fillLog();
       sizePost();
-      if (!calm) { bakeTiles(); ctx = post.getContext('2d'); loop.add(tick); }
+      /* The loop runs in calm mode too now. It early-returns before any of the
+         moving parts, but the descent and the arc are navigation and story, not
+         motion, and reduced motion is not supposed to be a shorter piece. */
+      if (!calm) { bakeTiles(); ctx = post.getContext('2d'); }
       else { post.style.display = 'none'; }
+      loop.add(tick);
       muteBtn.hidden = false;
+      if (pilot) pilot.hidden = false;
+      addEventListener('keydown', onDescendKey);
+      if (narr) {
+        narr.textContent = '';
+        /* said once, at the top, where a fiction label belongs */
+        narrate('Recovered session, a fictional horror sequence layered over the portfolio. ' +
+          'The project records and activity figures in it are real and are the same ones on the main page. ' +
+          'Everything spoken in the first person is fiction. Press Escape at any time to return to the portfolio.');
+      }
       startTerminal();
+      dirStart();
       titleWhisper.arm();
       if (!calm && !muted) audio.start();
       addEventListener('resize', sizePost);
+      addEventListener('resize', onRailResize);
     }
     function unmount() {
       on = false;
+      var s = session;
       loop.remove(tick);
+      dirStop();
       audio.stop();
       titleWhisper.disarm();
       stopTerminal();
       removeEventListener('resize', sizePost);
+      removeEventListener('resize', onRailResize);
+      removeEventListener('scroll', onScroll);
+      removeEventListener('keydown', onDescendKey);
+      if (pilot) pilot.hidden = true;
       layer.setAttribute('inert', '');
+      layer.style.removeProperty('--bsD');
       var shell = doc.querySelector('.shell');
       if (shell) shell.removeAttribute('inert');
+      /* home before the exit path focuses him, or focus lands on a node that is
+         about to be moved */
+      dropMascot();
       muteBtn.hidden = true;
       mirror.style.textShadow = '';
       post.style.display = '';
+      /* how far they got, for the next visit's LAST SEEN line */
+      store.set('hsw-bs-exit', curFloor >= FLOORS - 1 ? 'end' : 'esc');
+      doc.documentElement.style.scrollBehavior = '';
+      scrollTo(0, savedScroll);
       /* Leave nothing behind, but only if he has not taken the page again in
          the meantime: this clear runs after the collapse, and a fast re-entry
          would otherwise wipe the freshly built stage. */
       setTimeout(function () {
-        if (on) return;
+        if (on || s !== session) return;
         mirror.textContent = ''; ghost.textContent = ''; term.textContent = ''; glyphs = [];
+        if (narr) narr.textContent = '';
+        floorEls.forEach(function (f) { f.classList.remove('far'); });
       }, 340);
     }
 
-    /* ---- the terminal: the part of the site that does not exist ---- */
-    var termTimers = [];
-    var SCRIPT = [
-      { c: 'dim', t: 'recovered session // channel 58' },
-      { c: 'cmd', t: 'whoami' },
-      { c: '', t: 'husky' },
-      { c: 'cmd', t: 'ls ./built' },
-      { c: '', t: 'snapwyrm/  minesweeper/  offsiteai/  bots/  ' + '██████/' },
-      { c: 'cmd', t: 'cat ./built/██████/readme' },
-      { c: 'err', t: 'permission denied: it reads itself now' },
-      { c: 'cmd', t: 'ps aux | grep wyrm' },
-      { c: '', t: 'wyrm  1  99.9  awake  since you opened the page' },
-      { c: 'him', t: 'you kept clicking' },
-      { c: 'cmd', t: 'kill -9 1' },
-      { c: 'err', t: 'no such process. he is not running. he is hosting.' },
-      { c: 'him', t: 'he built me to ship. so I shipped.' },
-      { c: 'him', t: 'everything he told you about himself up there is true.' },
-      { c: 'him', t: 'he just leaves out how much of it he did alone, at hours like this.' },
-      { c: 'dim', t: 'session continues' },
-      { c: 'key', t: '> the light is a button. so is the way deeper. [ 5 8 ]' }
+    /* ---- the terminal: the part of the site that does not exist ------------
+       This used to be one 17-line script on an endless 9-second loop, which is
+       most of why the mode read as a tape rather than as a story: it could not
+       end, so nothing in it could mean anything. It is now segmented by floor
+       and it runs exactly once, in order, and stops.
+       Rows carry t (what is shown, defilable) and optionally a (the clean
+       reading for assistive tech). Anything with a block glyph in it MUST carry
+       an a, because █ is decoration and reads as noise. */
+    var termTimers = [], termFloor = -1;
+    var LATE = (function () { var h = new Date().getHours(); return h >= 23 || h < 5; })();
+    var FLOOR_SCRIPT = [
+      [ /* 0, surface */
+        { c: 'dim', t: 'recovered session // channel 58' },
+        { c: 'sys', t: 'volume  husky.snapwyrm.com' },
+        { c: 'sys', t: '58 sectors. reading from the outside in.' },
+        { c: 'cmd', t: 'whoami' },
+        { c: '', t: 'husky' },
+        { c: 'cmd', t: 'ps aux | grep wyrm' },
+        { c: '', t: 'wyrm  1  99.9  awake  since you opened the page' },
+        { c: 'him', t: 'you kept clicking' },
+        { c: 'dim', t: 'session readout attached. nothing in it left your browser.' },
+        { c: 'key', t: '> the light is a button. so is the way down. [ 5 8 ]' }
+      ],
+      [ /* 1, ./built */
+        { c: 'cmd', t: 'cd ./built && ls' },
+        { c: '', t: 'snapwyrm/  offsiteai/  minesweeper/  bots/  streams/  dom/  ██████/',
+                a: 'snapwyrm, offsiteai, minesweeper, bots, streams, dom, and one redacted directory' },
+        { c: 'sys', t: '7 records. 6 verified. 1 will not open.' },
+        /* this line licenses everything after it, so it lands next to the evidence */
+        { c: 'him', t: 'everything he told you about himself up there is true.' },
+        { c: 'cmd', t: 'cat ./built/██████/readme', a: 'cat the redacted readme' },
+        { c: 'err', t: 'permission denied: it reads itself now' },
+        { c: 'him', t: 'he does not remember writing that one.' },
+        { c: 'cmd', t: 'ls ../building' },
+        { c: '', t: 'market-terminal/' },
+        /* filed under building, not built, because that is what the real page
+           claims. Listing an unshipped thing under ./built would be a lie. */
+        { c: 'sys', t: 'not finished. he says so on the surface too.' }
+      ],
+      [ /* 2, ./logs */
+        { c: 'cmd', t: 'cd ../logs && wc -l *' },
+        { c: 'sys', t: 'reading.' },
+        { c: 'him', t: 'he built me to ship. so I shipped.' },
+        { c: 'him', t: LATE
+            ? 'he just leaves out how much of it he did alone, at hours like this.'
+            : 'he just leaves out how much of it he did alone.' },
+        { c: 'dim', t: 'the log does not say why. logs never do.' }
+      ],
+      [ /* 3, ./mirror */
+        { c: 'cmd', t: 'cd ../mirror && ls' },
+        { c: '', t: 'input1.cap  input2.cap' },
+        { c: 'cmd', t: 'play input2.cap' },
+        { c: 'sys', t: 'no signal. recording anyway.' },
+        { c: 'dim', t: 'the metadata burns in even when the picture does not.' },
+        { c: 'him', t: 'he put a mirror down here so he could check.' },
+        { c: 'him', t: 'check what, he did not write down.' }
+      ],
+      [ /* 4, ./quiet. The prompt is answered by nothing for the length of the
+             hold. The instinct is to fill this. Do not. */
+        { c: 'cmd', t: 'cd ../quiet && ls' },
+        { c: 'dim', t: 'empty.', wait: 15000 }
+      ],
+      [ /* 5, ./after */
+        { c: 'cmd', t: 'cd ../after && ls' },
+        { c: '', t: 'tracking.log' },
+        { c: 'cmd', t: 'tail -f tracking.log' },
+        { c: 'cmd', t: 'kill -9 1', wait: 9000 },
+        { c: 'err', t: 'no such process. he is not running. he is hosting.' },
+        /* the whole "he is not the threat" thesis, delivered as an apology */
+        { c: 'him', t: 'sorry. that one is not me.' }
+      ],
+      [ /* 6, ./channel */
+        { c: 'cmd', t: 'cd ../channel && ls' },
+        { c: '', t: '58.txt' },
+        { c: 'cmd', t: 'cat 58.txt' },
+        { c: 'key', t: 'subject: channel 58' },
+        { c: 'key', t: 'husky@snapwyrm.com' },
+        { c: 'sys', t: 'one record in this sector. it is not a project. it is a way to reach him.' },
+        { c: 'him', t: 'he reads those first.' },
+        /* the presence does not speak. It writes, three times, and this is the
+           third: no prompt, no attribution, one word and a slash. */
+        { c: 'raw', t: './with/', wait: 3000 },
+        { c: 'cmd', t: 'ls ./with' },
+        /* and it is never answered. He tells you to leave instead, which is the
+           last proof that he was not the thing you were afraid of. */
+        { c: 'him', t: 'go on. the light is still a button.', wait: 4500 }
+      ]
     ];
-    function startTerminal() {
-      term.textContent = '';
-      var i = 0;
+    function playFloor(f) {
+      /* latched: scrolling back up returns the camera, never the story */
+      if (!on || f <= termFloor || !FLOOR_SCRIPT[f]) return;
+      termFloor = f;
+      var rows = FLOOR_SCRIPT[f], i = 0;
       function next() {
-        if (!on || i >= SCRIPT.length) {
-          if (on) termTimers.push(setTimeout(function () { startTerminal(); }, 9000));
-          return;
-        }
-        var row = SCRIPT[i++];
+        if (!on || i >= rows.length) return;
+        var row = rows[i++];
         var div = doc.createElement('div');
         div.className = 'ln ' + row.c;
-        if (row.c === 'key') { div.textContent = row.t; wireSecret(div); }
-        else div.textContent = row.t;
+        div.textContent = row.t;
+        if (row.c === 'key') wireSecret(div);
         term.appendChild(div);
+        narrate(row.a || row.t);
         while (term.childNodes.length > 14) term.removeChild(term.firstChild);
         if (row.c === 'him' && !muted && !calm) FX.growl();
-        termTimers.push(setTimeout(next, calm ? 900 : (row.c === 'him' ? 1500 : 520 + Math.random() * 620)));
+        var gap = row.wait || (calm ? 900 : (row.c === 'him' ? 1500 : 520 + Math.random() * 620));
+        termTimers.push(setTimeout(next, gap));
       }
-      termTimers.push(setTimeout(next, calm ? 200 : 1400));
+      termTimers.push(setTimeout(next, calm ? 200 : 700));
     }
+    function startTerminal() { term.textContent = ''; termFloor = -1; playFloor(0); }
     function stopTerminal() { termTimers.forEach(clearTimeout); termTimers = []; }
 
     /* ---- the payoff. A bonus, never a gate: reachable without audio,
@@ -3991,7 +4762,12 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     doc.addEventListener('snapwyrm:blacksite', function (e) { mount(e.detail && e.detail.calm); });
     doc.addEventListener('snapwyrm:blacksite:exit', unmount);
     /* the heartbeat is the pulse everything breathes on */
-    window.__bsBeat = function () { target = 1; };
+    /* the mascot's heartbeat is the transient, not the arc */
+    window.__bsBeat = function () { pulse = 1; };
+    /* the palette's route into the descent, so it works with no wheel, no
+       pointer, and no sight of the stage */
+    window.__bsDescend = function (d) { if (on) descendTo(Math.round(depthT) + d); };
+    window.__bsGoto = function (f) { if (on) descendTo(f); };
 
     try {
       console.log('%c  ▲  channel 58  ', 'background:#0d0305;color:#e6d7a8;font-weight:800;font-size:13px;padding:6px 12px;border-radius:6px');
