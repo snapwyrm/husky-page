@@ -391,9 +391,23 @@ body.blacksite{background:#000}
 .blacksite .atmo,.blacksite .grain,.blacksite #fxgl,.blacksite #fx2d,.blacksite .progress{display:none!important}
 .blacksite #mScan{display:block}
 .blacksite #mAura{opacity:1;background:radial-gradient(120% 100% at 50% 45%, rgba(120,0,30,.10) 0%, rgba(0,0,0,.92) 78%)}
+/* The hero's parallax transform makes it the containing block for anything
+   position:fixed inside it, so the mascot was being placed against the hero box
+   instead of the viewport and then clipped by the body's overflow, which cut
+   his ears off. The real hero is hidden here anyway, so drop the transform and
+   let him be genuinely viewport-fixed. */
+.blacksite .hero .depth,.blacksite .hero .depth2{transform:none!important}
+/* The mascot carries .h-fade so it rides the hero entrance, and those rules
+   (.js.pre .hero .h-fade) are more specific than this one, so they were
+   winning the transform and leaving him uncentred with his ears clipped.
+   While he owns the page he is not part of the hero, so force it. */
 .blacksite .mascot{
-  position:fixed;visibility:visible;left:50%;top:46%;right:auto;width:min(46vw,300px);
-  transform:translate(-50%,-50%);z-index:60;
+  position:fixed;visibility:visible;left:50%;top:44%;right:auto;
+  width:min(42vw,290px);max-height:76vh;
+  transform:translate(-50%,-50%)!important;opacity:1!important;z-index:60;
+}
+@media(max-width:640px){
+  .blacksite .mascot{width:min(58vw,230px);top:40%}
 }
 .blacksite .mascot .pose{animation:bsBreathe 3.4s var(--ease-io) infinite}
 @keyframes bsBreathe{50%{transform:scale(1.02)}}
