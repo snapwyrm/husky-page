@@ -64,26 +64,146 @@
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23a855f7'/%3E%3Cstop offset='.55' stop-color='%238b5cf6'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='8' fill='%230a090f'/%3E%3Cpath d='M16 4.5 25 16l-9 11.5L7 16z' fill='url(%23g)'/%3E%3Cpath d='M16 9.5 21.5 16 16 22.5 10.5 16z' fill='%230a090f' opacity='.55'/%3E%3C/svg%3E">
 
+<!-- the display face renders above the fold, so it goes on the wire immediately.
+     crossorigin is required on font preloads even same-origin: omitting it
+     causes the browser to fetch the file twice. -->
+<link rel="preload" href="/assets/fonts/bricolage-display.woff2" as="font" type="font/woff2" crossorigin>
+
 <style>
 /* ==========================================================================
-   tokens: brand lifted from snapwyrm.com global.css, motion system added
+   the typeface
+
+   v2 declared 'Inter' and never loaded it, so every visitor without Inter
+   installed (nearly all of them) read this page in Segoe UI or SF, and every
+   hand-tuned tracking value was tuned against a face the page never met.
+
+   One self-hosted display face, same-origin, same delivery as the mascot
+   frames: no CDN, no build step, no third-party request. Subset to the ~112
+   glyphs display type actually uses, with the opsz and wght axes kept live so
+   a 17px card title and a 300px wordmark are different drawings rather than
+   one drawing scaled. Body and UI stay on the system stack, mono is the
+   system mono, so this costs the page exactly one request.
+
+   The two fallback faces exist to make the swap free: their metrics are
+   overridden to match Bricolage's, so the line box is identical before and
+   after the font lands and swapping causes zero layout shift. That matters
+   structurally here, because .hero h1 .l is an overflow:hidden mask whose
+   clipping box depends on the ascent.
    ========================================================================== */
+@font-face{
+  font-family:'Bricolage';
+  src:url('/assets/fonts/bricolage-display.woff2') format('woff2-variations');
+  font-weight:200 800; font-stretch:100%; font-display:swap;
+}
+/* Windows: Segoe UI, x-height .500 against Bricolage's .528 */
+@font-face{
+  font-family:'Bricolage Fallback';
+  src:local('Segoe UI');
+  size-adjust:105.6%; ascent-override:88.07%; descent-override:25.57%; line-gap-override:0%;
+}
+/* Apple and everything else: SF / Helvetica Neue, x-height ~.517 */
+@font-face{
+  font-family:'Bricolage Fallback';
+  src:local('SF Pro Display'),local('Helvetica Neue'),local('Arial');
+  size-adjust:102.1%; ascent-override:91.06%; descent-override:26.44%; line-gap-override:0%;
+}
+
+/* ==========================================================================
+   tokens: brand lifted from snapwyrm.com global.css, plus the scales v2
+   never had. Anything with a hex written first and an oklch or color-mix
+   written second is the same double-declaration idiom --spring already uses:
+   old engines keep the hex, new ones take the perceptual value.
+   ========================================================================== */
+@property --sheen{syntax:'<angle>';inherits:false;initial-value:0deg}
+@property --amb{syntax:'<number>';inherits:true;initial-value:292}
+
 :root{
   color-scheme: dark;
+
+  /* ---- surfaces: a tonal elevation ladder. On a dark UI elevation is
+     carried by LIGHT, not by shade: a black shadow on a near-black field is
+     mathematically present and perceptually absent. Higher means lighter. */
   --ink:#060509; --bg:#0a090f; --bg-2:#0e0c15; --panel:#14111d; --panel-2:#1a1626;
-  --glass:rgba(24,19,40,.55);
+  --e0:#0a090f;   /* the page */
+  --e1:#100d18;   /* wells: service rows, chips, the heatmap trough */
+  --e2:#161222;   /* the standard card */
+  --e3:#1c1729;   /* flagship, contact band */
+  --e4:#231b35;   /* dialogs, the command palette */
+  --glass:rgba(24,19,40,.55);  /* kept: the nav scrim and the band still earn it */
+
+  /* ---- light: ONE direction for the whole page, top and slightly left, which
+     is where the atmosphere's own hotspot already is. Every surface gradient
+     and every shadow offset agrees with it. v2 had seven. */
+  --lit:152deg;
+  --rim-1:inset 0 1px 0 rgba(255,255,255,.05), inset 0 -1px 0 rgba(0,0,0,.34);
+  --rim-2:inset 0 1px 0 rgba(255,255,255,.09), inset 0 -1px 0 rgba(0,0,0,.44);
+  --rim-3:inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(0,0,0,.5);
+  /* contact ring first, then the ambient falloff: without the tight layer a
+     shadow on a dark field reads as fog rather than as height */
+  --sh-1:0 0 0 1px rgba(0,0,0,.22), 0 1px 2px rgba(0,0,0,.4), 0 6px 16px -8px rgba(0,0,0,.5);
+  --sh-2:0 0 0 1px rgba(0,0,0,.26), 0 2px 4px rgba(0,0,0,.44), 0 14px 34px -14px rgba(0,0,0,.6);
+  --sh-3:0 0 0 1px rgba(0,0,0,.3), 0 3px 6px rgba(0,0,0,.48), 0 28px 62px -22px rgba(0,0,0,.7);
+
   --border:rgba(255,255,255,.07); --border-strong:rgba(255,255,255,.12);
-  /* muted-2 sits at ~5:1 on the ink background so small print still passes AA */
-  --text:#f3f1fb; --muted:rgba(243,241,251,.56); --muted-2:rgba(243,241,251,.52);
+
+  /* ---- text: three tiers instead of one. v2 ran body copy at ~17:1, about
+     four times AA, which is halation territory: when everything glows, glow
+     stops meaning anything. Near-white and bloom are now reserved for display
+     type and live numerals. */
+  --text:#e6e2f2; --text-hi:#f7f5ff;
+  --lead:rgba(230,226,242,.82);   /* first paragraph of a section */
+  --muted:rgba(230,226,242,.64);  /* body */
+  --muted-2:rgba(230,226,242,.52);/* meta and captions, 12px and up only */
+
+  /* ---- accent: three inputs, everything else derived. In oklch the violet
+     and the cyan finally sit at the same perceived lightness, which they did
+     not in v2 (the cyan read hotter and stole every composition it touched). */
   --accent:#8b5cf6; --accent-2:#a78bfa; --accent-hot:#c4b5fd;
   --accent-soft:rgba(139,92,246,.14); --accent-line:rgba(139,92,246,.5); --accent-glow:rgba(139,92,246,.45);
   --cyan:#22d3ee; --mint:#34d399; --danger:#ff5c6c;
+  --accent:oklch(.62 .19 292); --accent-2:oklch(.72 .16 292); --accent-hot:oklch(.82 .12 292);
+  --cyan:oklch(.72 .13 205); --mint:oklch(.74 .14 162);
+  --accent-soft:color-mix(in oklab, var(--accent) 14%, transparent);
+  --accent-line:color-mix(in oklab, var(--accent) 50%, transparent);
+  --accent-glow:color-mix(in oklab, var(--accent) 45%, transparent);
+  /* --ca is the per-card colour identity: each work card sets its own, and the
+     icon, kicker, edge and interior tint all read it. v2 assigned these by
+     nth-child, which disagreed with the markup (Minesweeper's icon was mint
+     while its own kicker was cyan). */
+  --ca:var(--accent); --ca-2:var(--accent-hot);
+
   --charge:linear-gradient(135deg,#7c3aed 0%,#8b5cf6 42%,#22d3ee 100%);
   --charge-soft:linear-gradient(135deg,rgba(124,58,237,.22),rgba(34,211,238,.14));
-  --radius:16px; --radius-sm:11px;
+
+  --radius-xs:8px; --radius-sm:11px; --radius:16px; --radius-lg:22px; --radius-xl:28px;
   --shadow:0 16px 44px rgba(0,0,0,.5);
   --glow:0 0 0 1px var(--accent-line), 0 0 22px var(--accent-glow);
-  --font:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* ---- type. v2 had ~70 hardcoded font-size literals across 16 values, six
+     of them half-pixel, and a hole between the 60px h1 and the next largest
+     type on the page (17px), so four consecutive sections had no landing
+     point for the eye. */
+  --font-display:'Bricolage','Bricolage Fallback',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --font-mono:ui-monospace,'SF Mono','Cascadia Mono','Segoe UI Mono','Roboto Mono',monospace;
+  --fs-2xs:11.5px;
+  --fs-xs:12.5px;
+  --fs-sm:13.5px;
+  --fs-base:15px;
+  --fs-md:clamp(15.5px,1.05vw,17px);
+  --fs-lg:clamp(18px,1.7vw,21px);
+  --fs-xl:clamp(22px,2.9vw,30px);
+  --fs-2xl:clamp(27px,4.4vw,44px);
+  --fs-display:clamp(38px,7.6vw,96px);
+  --fs-mega:clamp(64px,19vw,286px);
+  /* uppercase needs MORE tracking as it gets smaller, which v2 had backwards
+     in two of its seven different values */
+  --track-caps:.14em; --track-caps-sm:.18em;
+  --lh-tight:1.32; --lh-body:1.62;
+
+  /* ---- space. v2 had no spacing token at all, so a 70px section and a
+     1400px section were given the same 60px of air. */
+  --s1:6px; --s2:10px; --s3:16px; --s4:26px; --s5:42px; --s6:68px; --s7:104px; --s8:150px;
 
   /* motion system: every animation on the page uses these, no default 'ease' anywhere */
   --ease-out:cubic-bezier(.16,1,.3,1);
@@ -92,18 +212,25 @@
   /* spring for pops (stiffness ~200, damping ~15); bezier fallback declared first */
   --spring:cubic-bezier(.34,1.56,.64,1);
   --spring:linear(0, 0.0035, 0.0138 2.2%, 0.0532 4.5%, 0.1936 9.2%, 0.4949 17%, 0.6613 21.5%, 0.8048 26%, 0.8994 30%, 0.9689 34.2%, 1.0181 38.7%, 1.0453 43%, 1.0576 47.5%, 1.0559 53%, 1.0163 76.2%, 1.0009 91.2%, 1);
+  --spring-soft:linear(0, .4 12%, .9 30%, 1.04 46%, .99 62%, 1);
 
   /* shared pointer depth, written by JS, consumed everywhere */
   --px:0; --py:0;
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:86px}
+html{
+  scroll-behavior:smooth;-webkit-text-size-adjust:100%;scroll-padding-top:86px;
+  /* free the moment the variable face lands: opsz is a live axis on it */
+  font-optical-sizing:auto;
+}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
-  min-height:100vh;overflow-x:hidden;font-size:16px;line-height:1.6;
+  min-height:100vh;overflow-x:hidden;font-size:16px;line-height:var(--lh-body);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
 }
+/* display type is the only thing that gets the webfont */
+h1,h2,h3,.display{font-family:var(--font-display);font-optical-sizing:auto}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 img,svg,canvas{display:block;max-width:100%}
@@ -119,7 +246,17 @@ p,li{text-wrap:pretty}
 /* only suppress the ring for pointer focus; browsers without :focus-visible keep it */
 :focus:not(:focus-visible){outline:none}
 :focus-visible{outline:2px solid var(--accent-hot);outline-offset:3px;border-radius:6px}
-.mono{font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+/* .mono was a class named after a thing it did not do: it set tabular figures
+   and no family, so every machine reading on the page (hashes, prices, timers,
+   the section counters, the palette keycaps) rendered in the UI sans. The
+   negative tracking goes too: mono advance widths are already fixed, and
+   pulling them tighter collides glyphs at small sizes. */
+.mono,.sec-head .idx,.svc b,.pstat b,.seal-btn,.seal-row .v,.seal-row .k,
+.kbd-pill kbd,.pal-input kbd,.ms-hud,#intro .iurl,.hm-months,.hm-days{
+  font-family:var(--font-mono);
+  font-variant-numeric:tabular-nums slashed-zero;
+  letter-spacing:0;
+}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .skip{
   position:absolute;left:-9999px;top:0;z-index:200;padding:12px 18px;
@@ -135,15 +272,41 @@ p,li{text-wrap:pretty}
   position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;
   background:radial-gradient(130% 90% at 50% -15%, #170f29 0%, var(--bg) 48%, var(--ink) 100%);
 }
+/* the two lamps drift. They were static in v2, which made the atmosphere
+   wallpaper: a sky that never moves reads as a photograph of a sky. Transform
+   only, promoted, at coprime durations so the loop point never lands twice in
+   the same place. They also lean with the shared pointer, so the light has a
+   source the whole page agrees on. */
 .atmo::before,.atmo::after{
   content:'';position:absolute;border-radius:50%;filter:blur(90px);opacity:.4;mix-blend-mode:screen;
+  will-change:transform;
 }
-.atmo::before{width:56vw;height:56vw;left:-14vw;top:-16vw;background:radial-gradient(circle, rgba(124,58,237,.5), transparent 65%)}
-.atmo::after{width:48vw;height:48vw;right:-12vw;top:32vh;background:radial-gradient(circle, rgba(34,211,238,.24), transparent 65%)}
+.atmo::before{
+  width:56vw;height:56vw;left:-14vw;top:-16vw;background:radial-gradient(circle, rgba(124,58,237,.5), transparent 65%);
+  animation:driftA 47s var(--ease-io) infinite;
+}
+.atmo::after{
+  width:48vw;height:48vw;right:-12vw;top:32vh;background:radial-gradient(circle, rgba(34,211,238,.24), transparent 65%);
+  animation:driftB 61s var(--ease-io) infinite;
+}
+@keyframes driftA{
+  0%,100%{transform:translate3d(calc(var(--px)*22px),calc(var(--py)*14px),0) scale(1)}
+  50%{transform:translate3d(calc(var(--px)*22px + 4vw),calc(var(--py)*14px + 3vh),0) scale(1.09)}
+}
+@keyframes driftB{
+  0%,100%{transform:translate3d(calc(var(--px)*-16px),calc(var(--py)*-10px),0) scale(1.06)}
+  50%{transform:translate3d(calc(var(--px)*-16px - 3vw),calc(var(--py)*-10px + 4vh),0) scale(1)}
+}
+/* atmospheric perspective: distance reads as loss of contrast, not as more
+   blur. Done with opacity rather than a saturate/contrast filter on purpose:
+   both canvases repaint every frame, and a filter would re-run per frame,
+   where opacity is free to the compositor. */
+#fxgl{opacity:.8}
+#fx2d{opacity:.92}
 /* static star sprinkle for the no-canvas tiers */
 .stars-css{position:absolute;inset:0}
 .stars-css i,.stars-css i::before,.stars-css i::after{
-  content:'';position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.5;
+  content:'';position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.34;
   box-shadow:4vw 12vh 0 #fff, 12vw 68vh 0 rgba(255,255,255,.6), 19vw 32vh 0 #fff, 26vw 81vh 0 rgba(255,255,255,.5),
     33vw 15vh 0 #fff, 41vw 55vh 0 rgba(255,255,255,.7), 48vw 24vh 0 #fff, 55vw 74vh 0 rgba(255,255,255,.5),
     62vw 43vh 0 #fff, 69vw 9vh 0 rgba(255,255,255,.6), 76vw 62vh 0 #fff, 83vw 29vh 0 rgba(255,255,255,.5),
@@ -183,6 +346,46 @@ p,li{text-wrap:pretty}
 .shell{position:relative;z-index:3}
 .wrap{max-width:1100px;margin:0 auto;padding-inline:max(24px, env(safe-area-inset-left)) max(24px, env(safe-area-inset-right))}
 
+/* --------------------------------------------------------------------------
+   width bands
+
+   v2 put class="wrap" on <main>, so every section, every card, the marquee,
+   the heatmap and the contact band all inherited one 1100px column and there
+   was no way for anything to break out of it. That single fact is the root
+   cause of "it reads as a vertical stack of identical boxes": a page with one
+   width has no composition, only a running order.
+
+   Three bands. Content is the reading column. Wide is for grids and imagery
+   that should feel larger than the prose. Full is edge to edge, for the
+   marquee and the contact band. Elements opt in; the default is content.
+
+   Implemented by repeating the same track list on main and on each section
+   rather than with subgrid, so it works everywhere without a fallback path.
+   -------------------------------------------------------------------------- */
+.bands{
+  --gutter-l:max(20px, env(safe-area-inset-left));
+  --gutter-r:max(20px, env(safe-area-inset-right));
+  --col:1100px;
+  /* the wide band only exists once the viewport can afford it: below roughly
+     900px it collapses to zero so narrow screens give the reading column the
+     whole width instead of paying for a bleed nothing uses */
+  --bleed:clamp(0px, (100vw - 900px) * .18, 104px);
+  display:grid;
+  grid-template-columns:
+    [full-start] minmax(var(--gutter-l),1fr)
+    [wide-start] minmax(0,var(--bleed))
+    [content-start] minmax(0,var(--col)) [content-end]
+    minmax(0,var(--bleed)) [wide-end]
+    minmax(var(--gutter-r),1fr) [full-end];
+}
+.bands > *{grid-column:content-start/content-end}
+.bands > .b-full{grid-column:full-start/full-end}
+.bands > .b-wide{grid-column:wide-start/wide-end}
+/* a nested band grid has to span the full width of its parent, or it re-derives
+   its gutters and bleed from an already-narrowed column and every band inside
+   it comes out short */
+.bands > .bands{grid-column:full-start/full-end}
+
 .nav{position:sticky;top:0;z-index:50;border-bottom:1px solid transparent}
 /* progressive blur scrim: layered masked blurs, cheap and always on */
 .nav .scrim{position:absolute;inset:0;pointer-events:none;overflow:hidden}
@@ -196,11 +399,18 @@ p,li{text-wrap:pretty}
 .nav-inner{position:relative;display:flex;align-items:center;gap:14px;height:66px;max-width:1100px;margin:0 auto;padding-inline:max(24px, env(safe-area-inset-left)) }
 .nav-inner{padding-right:max(24px, env(safe-area-inset-right))}
 .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px;letter-spacing:-.01em;user-select:none}
-.brand .mark{width:26px;height:26px;flex:0 0 auto;filter:drop-shadow(0 0 10px var(--accent-glow));animation:breathe 5s var(--ease-io) infinite}
-@keyframes breathe{
-  0%,100%{filter:drop-shadow(0 0 6px var(--accent-glow))}
-  50%{filter:drop-shadow(0 0 14px var(--accent)) drop-shadow(0 0 24px var(--accent-glow))}
+/* the glow breathes on OPACITY, not on filter. v2 re-rasterised this SVG every
+   frame for the life of the page, inside a sticky nav that is always
+   composited, to produce a pulse nothing else could see. */
+.brand .mark{width:26px;height:26px;flex:0 0 auto;position:relative;z-index:1;filter:drop-shadow(0 0 7px var(--accent-glow))}
+.brand{position:relative}
+.brand::before{
+  content:'';position:absolute;left:-5px;top:50%;width:36px;height:36px;translate:0 -50%;
+  border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle, var(--accent-glow), transparent 68%);
+  opacity:.35;animation:breathe 5s var(--ease-io) infinite;
 }
+@keyframes breathe{0%,100%{opacity:.28}50%{opacity:.85}}
 .nav-links{display:flex;align-items:center;gap:2px;margin-left:auto}
 .nav-link{padding:8px 12px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);transition:color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out)}
 .nav-link:hover{color:var(--text);background:rgba(255,255,255,.04)}
@@ -211,7 +421,7 @@ p,li{text-wrap:pretty}
   font-size:12.5px;font-weight:500;transition:color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), transform var(--t-fast) var(--spring);
 }
 .kbd-pill:hover{color:var(--text);border-color:var(--accent-line);transform:translateY(-1px)}
-.kbd-pill kbd{font-family:var(--font);font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--accent-hot)}
+.kbd-pill kbd{font-size:11px;font-weight:600;padding:2px 6px;border-radius:5px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--accent-hot)}
 .nav-cta{margin-left:4px;padding:9px 17px;font-size:14px}
 @media(max-width:720px){
   .nav-links .nav-link{display:none}
@@ -255,33 +465,52 @@ p,li{text-wrap:pretty}
 .tag .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 8px var(--mint);animation:pulse 1.9s var(--ease-io) infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 
+/* the shimmer is a one-shot on arrival and on hover, not wallpaper. Running it
+   forever repainted background-clipped text every frame and, worse, made the
+   effect mean nothing: a thing that always moves is not a highlight. */
 .grad{
   background:linear-gradient(100deg,#a855f7,#22d3ee,#34d399,#a855f7);
   background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 22px rgba(139,92,246,.4));
-  animation:brandShimmer 6s linear infinite;
+  filter:drop-shadow(0 0 22px rgba(139,92,246,.35));
 }
+.js.hero-in .grad{animation:brandShimmer 2.6s var(--ease-out) .5s 1 both}
+.hero h1:hover .grad{animation:brandShimmer 1.6s var(--ease-out) 1}
 @keyframes brandShimmer{to{background-position:200% center}}
 
 /* ==========================================================================
    hero
    ========================================================================== */
-.hero{padding:88px 0 10px;position:relative}
+/* the hero never owned a viewport in v2: 88px of padding around roughly 370px
+   of content, so "01 WORK" appeared on the first screen and the mascot was a
+   170px sticker absolutely parked at right:10px rather than part of any
+   composition. It is a two-column stage now, and he stands in it. */
+.hero{
+  padding-block:var(--s6) var(--s5);position:relative;
+  min-height:min(84svh,860px);display:grid;align-content:center;
+}
 /* pointer-depth layers */
-.hero .depth{transform:translate3d(calc(var(--px)*10px),calc(var(--py)*7px),0)}
+.hero .depth{
+  transform:translate3d(calc(var(--px)*10px),calc(var(--py)*7px),0);
+  display:grid;grid-template-columns:minmax(0,1fr) clamp(150px,22vw,330px);
+  column-gap:clamp(16px,4vw,56px);align-items:center;
+}
 .hero .depth2{transform:translate3d(calc(var(--px)*18px),calc(var(--py)*12px),0)}
+.hero-copy{grid-column:1;min-width:0}
 .hero h1{
-  font-size:clamp(37px,6.2vw,60px);font-weight:800;line-height:1.05;letter-spacing:-.035em;
-  margin:20px 0 0;max-width:26ch;padding-bottom:.08em;
+  font-size:var(--fs-display);font-weight:730;line-height:1.02;
+  /* tracking has to run opposite to size: one fixed value across a 2.5x clamp
+     range is loose at 96px and cramped at 38px */
+  letter-spacing:clamp(-.045em,-.062em + .05vw,-.022em);
+  margin:var(--s3) 0 0;max-width:15ch;padding-bottom:.08em;color:var(--text-hi);
 }
 /* masked line reveal: .l is the mask, .li translates up into view */
 .hero h1 .l{display:block;overflow:hidden;padding-bottom:.06em;margin-bottom:-.06em}
 .hero h1 .li{display:inline-block}
 .js.pre .hero h1 .li{transform:translateY(112%)}
 .js.hero-in .hero h1 .li{transition:transform .9s var(--ease-out);transition-delay:calc(var(--i)*110ms);transform:none}
-.hero .sub{color:var(--muted);font-size:clamp(15px,2.2vw,18px);line-height:1.62;max-width:52ch;margin:18px 0 28px}
+.hero .sub{color:var(--lead);font-size:var(--fs-md);line-height:var(--lh-body);max-width:46ch;margin:var(--s3) 0 var(--s4)}
 .cta{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.trustline{margin-top:24px;font-size:12.5px;color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.trustline{margin-top:var(--s4);font-size:var(--fs-xs);color:var(--muted);letter-spacing:.06em;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
 .trustline .sep{width:3px;height:3px;border-radius:50%;background:var(--muted-2);flex:0 0 auto}
 /* everything below h1 fades in after the lines land */
 .js.pre .hero .h-fade{opacity:0;transform:translateY(14px)}
@@ -290,32 +519,157 @@ p,li{text-wrap:pretty}
 /* ==========================================================================
    sections
    ========================================================================== */
-.sec{padding-block:60px 0;counter-increment:sec}
+/* sections carry the same band grid so their children can opt out of the
+   reading column, and they are weighted by importance rather than all getting
+   the same 60px: v2 gave the 70px Stack rail and the 1400px Work section
+   identical air, which is most of why the page scanned as undifferentiated. */
+.sec{padding-block:var(--s6) 0;counter-increment:sec;position:relative}
+#work{padding-block:var(--s7) 0}
+#contact{padding-block:var(--s7) 0}
+#stack,#proof{padding-block:var(--s5) 0}
 body{counter-reset:sec}
-.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:20px}
+
+/* per-section ambient. The atmosphere is position:fixed, so in v2 the light at
+   section 01 was byte-identical to the light at the footer and descending the
+   page felt like scrolling past six identically lit panels. Each section now
+   carries its own hue and paints one soft wash behind itself, so the page
+   travels: violet through the work, mint where the claims are verifiable,
+   cyan at the commercial ask, warm violet again at the close. */
+#work{--amb:288} #proof{--amb:162} #about{--amb:296}
+#services{--amb:206} #stack{--amb:250} #contact{--amb:310}
+/* insets stay non-negative: bleeding the wash past the section widened the
+   document and put 190px of horizontal scroll on the page. The gradient's own
+   falloff does the softening instead. */
+.sec::before{
+  content:'';position:absolute;z-index:-1;pointer-events:none;
+  inset:4% 0 10%;
+  background:radial-gradient(64% 48% at 50% 42%, oklch(.58 .17 var(--amb,292) / .13), transparent 72%);
+}
+@supports not (color: oklch(.5 .1 200)){ .sec::before{background:radial-gradient(58% 46% at 50% 42%, rgba(139,92,246,.1), transparent 72%)} }
+
+/* the section header is a two-tier unit now. v2's header was a 12px uppercase
+   muted label whose decorative hairline outranked it, so six major headings
+   were the quietest text on the page and nothing marked where you were. */
+.sec-head{margin-bottom:var(--s4)}
+.sec-h{display:grid;gap:var(--s2);font-weight:inherit}
+.sec-kicker{
+  display:flex;align-items:center;gap:11px;
+  font-size:var(--fs-2xs);font-weight:600;text-transform:uppercase;
+  letter-spacing:var(--track-caps-sm);color:var(--muted-2);
+}
 /* numbering comes from a counter so a hidden section (display:none) never
    consumes a number and the sequence can't show gaps */
-.sec-head .idx{font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--accent-hot);font-variant-numeric:tabular-nums}
-.sec-head .idx::before{content:counter(sec,decimal-leading-zero)}
-.sec-head h2{font-size:12px;text-transform:uppercase;letter-spacing:.2em;font-weight:600;color:var(--muted)}
-.sec-head::after{content:'';height:1px;flex:1;align-self:center;background:linear-gradient(90deg,var(--border-strong),transparent)}
+.sec-kicker .idx{color:var(--accent-hot);font-weight:700}
+.sec-kicker .idx::before{content:counter(sec,decimal-leading-zero)}
+.sec-kicker::after{
+  content:'';height:1px;flex:1;
+  background:linear-gradient(90deg,var(--border-strong),transparent);
+}
+.sec-lede{
+  display:block;font-family:var(--font-display);
+  font-size:var(--fs-xl);font-weight:600;line-height:1.14;
+  letter-spacing:clamp(-.03em,-.042em + .04vw,-.016em);
+  color:var(--text-hi);max-width:22ch;
+}
 
 /* ==========================================================================
    work grid: spotlight + border-glow cards (this surface never tilts)
    ========================================================================== */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* ranked, not tiled. v2 laid six cards out as two full-width bars over a 2x2
+   of equal tiles, all sharing one recipe, so the flagship was indistinguishable
+   from the three-line card at the bottom. Three tiers now, and the tier is
+   carried by size, surface AND content, not by a kicker that says "flagship". */
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:var(--s3)}
 .wcard{
-  position:relative;border-radius:var(--radius);padding:24px;overflow:hidden;
-  background:var(--glass);border:1px solid var(--border);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
-  box-shadow:var(--shadow);
-  transition:transform var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out);
+  position:relative;border-radius:var(--radius);padding:var(--s4);overflow:hidden;
+  /* opaque. v2's --glass was 45% transparent over the animating WebGL nebula,
+     so every card interior slowly changed brightness and body copy drifted
+     through its contrast floor on bright shader frames. The atmosphere lives
+     in the gutters now, where it actually reads. */
+  background:linear-gradient(var(--lit), color-mix(in oklab, var(--ca) 7%, transparent), transparent 42%), var(--e2);
+  border:none;
+  box-shadow:var(--rim-1), var(--sh-1);
+  transition:transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
 }
-/* top-edge light catch */
-.wcard::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent 18%)}
-.wcard:hover{transform:translateY(-3px);border-color:var(--accent-line)}
+/* a directional edge, bright where the light hits and darker where it turns
+   away. v2's uniform rgba(255,255,255,.07) hairline resolved to about 1.19:1
+   against the card fill, which is to say it was invisible, and it was the only
+   thing defining every surface on the page. */
+.wcard::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:3;
+  background:linear-gradient(var(--lit), rgba(255,255,255,.19), rgba(255,255,255,.05) 30%, rgba(255,255,255,.015) 64%, rgba(0,0,0,.45));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);mask-composite:exclude;
+}
+.wcard:hover{transform:translateY(-3px);box-shadow:var(--rim-2), var(--sh-2)}
 .wcard.wide{grid-column:1/-1}
+
+/* the tiers */
+.wcard.flag{
+  grid-column:span 6;padding:var(--s5);border-radius:var(--radius-lg);
+  background:linear-gradient(var(--lit), color-mix(in oklab, var(--ca) 11%, transparent), transparent 46%), var(--e3);
+  box-shadow:var(--rim-3), var(--sh-3);
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:var(--s5);align-items:center;
+}
+.wcard.flag > .plate{grid-column:1}
+.flag-copy{grid-column:2;min-width:0}
+.flag-copy .visit{margin-top:var(--s3)}
+.wcard.med{grid-column:span 3}
+.wcard.mini{grid-column:span 2;padding:var(--s3) var(--s4) var(--s4)}
+.wcard.mini h3{font-size:var(--fs-md)}
+.wcard.mini p{font-size:var(--fs-sm)}
+.wcard.mini .ico{width:32px;height:32px;border-radius:9px;margin-bottom:11px}
+.wcard.mini .ico svg{width:16px;height:16px}
+
+/* the product surfaces: a brand plate for the site, plain shots for the rest.
+   width and height attributes on every img give the intrinsic ratio, so the
+   box is reserved before the bytes land and nothing shifts. */
+.plate,.shot{
+  position:relative;border-radius:var(--radius-sm);overflow:hidden;background:var(--e1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), 0 10px 30px -14px rgba(0,0,0,.8);
+}
+/* one mount, two very different source ratios (the widget shot is portrait, the
+   game board is 2.8:1). Cropping either to a common ratio would cut the thing
+   worth seeing, so both sit contained on a tinted plate instead: same box, same
+   weight, nothing hidden. */
+.shot{
+  margin-bottom:var(--s3);aspect-ratio:16/10;display:grid;padding:10px;
+  background:linear-gradient(var(--lit), color-mix(in oklab, var(--ca) 14%, transparent), transparent 62%), var(--e1);
+}
+/* the image stretches to the grid area and object-fit does the centring:
+   place-items:center would size it from its own intrinsic ratio instead, and
+   the portrait shot would overflow its mount and get clipped */
+.shot img{grid-area:1/1;width:100%;height:100%;min-height:0;object-fit:contain;border-radius:6px}
+.chrome{
+  display:flex;align-items:center;gap:6px;padding:9px 13px;
+  background:rgba(0,0,0,.4);box-shadow:inset 0 -1px 0 rgba(255,255,255,.06);
+}
+.chrome i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);flex:0 0 auto}
+.chrome b{
+  margin-left:9px;font-family:var(--font-mono);font-size:11px;font-weight:500;
+  color:var(--muted-2);letter-spacing:.01em;
+}
+.plate-body{
+  display:grid;place-items:center;padding:clamp(22px,4vw,44px);aspect-ratio:16/9;
+  background:
+    radial-gradient(120% 150% at 18% -10%, color-mix(in oklab, var(--accent) 42%, transparent), transparent 62%),
+    radial-gradient(90% 120% at 96% 108%, color-mix(in oklab, var(--cyan) 26%, transparent), transparent 60%),
+    var(--e1);
+}
+.plate-body img{width:min(100%,430px);height:auto;filter:drop-shadow(0 8px 30px rgba(0,0,0,.55))}
+
+/* the tiers collapse in order: the flagship gives up its two columns first,
+   then the medium pair goes full width, then the minis stack */
+@media(max-width:900px){
+  .wcard.flag{grid-template-columns:1fr;gap:var(--s4);padding:var(--s4);border-radius:var(--radius)}
+  .wcard.flag > .plate,.flag-copy{grid-column:1}
+  .wcard.med{grid-column:span 6}
+  .wcard.mini{grid-column:span 3}
+}
+@media(max-width:560px){
+  .grid{gap:var(--s2)}
+  .wcard.mini{grid-column:span 6}
+}
 .wcard > *{position:relative;z-index:2}
 /* spotlight interior glow + border ring, driven by --mx/--my, opacity-only animation */
 .wcard .spot,.wcard .ring{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s var(--ease-out);z-index:1}
@@ -327,8 +681,10 @@ body{counter-reset:sec}
 }
 .spotlit .wcard .spot,.spotlit .wcard .ring{opacity:1}
 .wcard .ico{
-  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;
-  background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent-hot);margin-bottom:15px;
+  width:40px;height:40px;border-radius:12px;display:grid;place-items:center;margin-bottom:15px;
+  background:color-mix(in oklab, var(--ca) 13%, transparent);
+  border:1px solid color-mix(in oklab, var(--ca) 42%, transparent);
+  color:var(--ca-2);
 }
 .wcard .ico svg{width:20px;height:20px}
 /* real brand art in the icon slot */
@@ -336,8 +692,6 @@ body{counter-reset:sec}
 .ico.ico-img img{width:100%;height:100%;object-fit:contain}
 .ico.ico-img.photo{padding:0;overflow:hidden}
 .ico.ico-img.photo img{object-fit:cover;border-radius:inherit}
-.tcard .face .face-img{width:74px;height:74px;object-fit:contain;filter:drop-shadow(0 0 12px var(--accent-glow))}
-.tcard .face .face-img.photo{border-radius:16px;object-fit:cover;filter:drop-shadow(0 6px 16px rgba(0,0,0,.5))}
 /* flagship wordmark in the title slot */
 .wcard h3 .wordmark{height:34px;width:auto;display:inline-block;vertical-align:middle;filter:drop-shadow(0 0 14px rgba(139,92,246,.35))}
 /* OffsiteAI brand blue, faithful to their wordmark */
@@ -348,8 +702,9 @@ body{counter-reset:sec}
 /* the mascot: Husky's 17-frame rig. The rig element is transformed every
    frame by its own loop (bob, parallax, shakes), so the button is a static
    anchor and all motion lives one level down. */
-.mascot{position:absolute;right:10px;top:88px;width:170px;aspect-ratio:1;padding:0;z-index:5}
-.mascot .rig{position:absolute;inset:0;display:block;touch-action:manipulation}
+.mascot{position:relative;grid-column:2;justify-self:center;width:100%;aspect-ratio:1;padding:0;z-index:5}
+/* transform-origin belongs in the sheet, not re-written by JS every frame */
+.mascot .rig{position:absolute;inset:0;display:block;touch-action:manipulation;transform-origin:50% 80%}
 .mascot .pose{position:absolute;inset:0;display:block}
 .mascot .pose img{
   position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
@@ -365,8 +720,15 @@ body{counter-reset:sec}
 .mascot .ring{position:absolute;border-radius:50%;pointer-events:none}
 .mascot .heart{position:absolute;pointer-events:none;width:18px;height:18px}
 .mascot .heart svg{width:100%;height:100%;filter:drop-shadow(0 0 8px rgba(255,143,179,.7))}
-@media(max-width:900px){.mascot{width:124px;top:66px;right:6px}}
-@media(max-width:640px){.mascot{width:82px;top:0;right:8px}}
+/* below the two-column threshold he stops being a column and becomes a face
+   above the headline, which is the only arrangement that keeps the measure
+   readable at 360px */
+@media(max-width:720px){
+  .hero{min-height:0;padding-block:var(--s5) var(--s4)}
+  .hero .depth{grid-template-columns:1fr;row-gap:var(--s3)}
+  .hero-copy{grid-row:2}
+  .mascot{grid-column:1;grid-row:1;justify-self:start;width:clamp(96px,26vw,152px)}
+}
 
 /* page-level mascot FX layers */
 #mAura{position:fixed;inset:0;pointer-events:none;z-index:42;opacity:0;transition:opacity .7s var(--ease-out);
@@ -445,6 +807,12 @@ body.blacksite{background:#000}
 #bsMirror .btn-primary{background:var(--charge);color:#c3b3b0}
 #bsMirror .btn-primary::before{display:none}
 #bsMirror .mascot{display:none} /* the real rig is centered separately */
+/* v3 made .hero .depth a two-column stage (copy | mascot). The mirror clones
+   that node and then removes the mascot, which would leave the corrupted hero
+   sitting in a narrow left column beside an empty gap. Inside the mirror the
+   stage collapses back to one column. */
+#bsMirror .depth{display:block}
+#bsMirror .hero-copy{max-width:none}
 /* Per-glyph cells. The width is pinned in JS to each character's own measured
    width, not to 1ch: a flat 1ch inflates every narrow letter and pushes the
    headline off a phone screen. Overflow is clipped so a combining mark can
@@ -625,14 +993,17 @@ body.blacksite{background:#000}
 @keyframes bsFlick{0%,88%,100%{opacity:.85}90%{opacity:.2}92%{opacity:.7}95%{opacity:.3}97%{opacity:.8}}
 /* his banner, used by the rig reactions */
 .mascot .banner{position:absolute;left:50%;top:-6px;transform:translateX(-50%);background:linear-gradient(92deg,#a855f7,#22d3ee);color:#fff;font-weight:800;font-size:12px;letter-spacing:.08em;padding:6px 13px;border-radius:999px;pointer-events:none;box-shadow:0 0 22px rgba(139,92,246,.45);white-space:nowrap}
-.wcard h3{font-size:17px;font-weight:700;letter-spacing:-.01em;line-height:1.3}
-.wcard p{color:var(--muted);font-size:14.5px;line-height:1.6}
-.wcard .kicker{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mint);margin:6px 0 10px}
-.wcard .kicker.violet{color:var(--accent-hot)}
-.wcard .kicker.cyan{color:var(--cyan)}
-.grid .wcard:nth-child(2) .ico{color:var(--cyan);background:rgba(34,211,238,.13);border-color:rgba(34,211,238,.42)}
-.grid .wcard:nth-child(3) .ico{color:var(--mint);background:rgba(52,211,153,.13);border-color:rgba(52,211,153,.42)}
-.grid .wcard:nth-child(5) .ico{color:var(--cyan);background:rgba(34,211,238,.13);border-color:rgba(34,211,238,.42)}
+.wcard h3{font-size:var(--fs-lg);font-weight:600;letter-spacing:-.022em;line-height:1.22;color:var(--text-hi)}
+.wcard.flag h3{font-size:var(--fs-xl);letter-spacing:-.03em}
+.wcard p{color:var(--muted);font-size:var(--fs-base);line-height:var(--lh-body)}
+.wcard.flag p{color:var(--lead);font-size:var(--fs-md)}
+/* the kicker reads the card's own colour instead of a positional override.
+   v2 painted Minesweeper's icon mint by nth-child while its own kicker markup
+   said cyan, so one card rendered three disagreeing colours. */
+.wcard .kicker{
+  font-size:var(--fs-2xs);font-weight:600;letter-spacing:var(--track-caps-sm);
+  text-transform:uppercase;color:var(--ca-2);margin:6px 0 10px;
+}
 .linked h3 a{display:inline-flex;align-items:center;gap:7px;transition:color var(--t-fast) var(--ease-out)}
 .linked h3 a .arw{width:13px;height:13px;flex:0 0 auto;color:var(--muted);transition:transform var(--t-fast) var(--ease-out), color var(--t-fast) var(--ease-out)}
 .linked:hover h3 a{color:var(--accent-hot)}
@@ -647,66 +1018,112 @@ body.blacksite{background:#000}
    proof of work: contributions heatmap (self-gating, hidden until data earns it)
    ========================================================================== */
 #proof[hidden]{display:none}
-.proof-card{position:relative;border-radius:var(--radius);padding:24px;background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow)}
-.proof-stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
-.pstat{
-  display:inline-flex;align-items:baseline;gap:7px;padding:8px 14px;border-radius:999px;
-  border:1px solid var(--border-strong);background:rgba(255,255,255,.03);font-size:13px;color:var(--muted);
+/* the card is composed around the numbers, not around the grid. His window is
+   about twenty weeks, so a grid stretched to 1100px would draw 47px squares;
+   the figure keeps a sane cell size and the reclaimed space goes to the three
+   numbers that are actually the strong part of this section. */
+.proof-card{
+  position:relative;border-radius:var(--radius);padding:var(--s5);
+  background:linear-gradient(var(--lit), color-mix(in oklab, var(--accent) 6%, transparent), transparent 40%), var(--e2);
+  box-shadow:var(--rim-1), var(--sh-1);
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s4) var(--s6);align-items:center;
 }
-.pstat b{font-size:16px;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums}
-.hm-scroll{overflow-x:auto;padding-bottom:6px}
-.hm{display:grid;grid-template-rows:repeat(7,10px);grid-auto-flow:column;grid-auto-columns:10px;gap:3px;width:max-content}
-.hm i{border-radius:2.5px;background:rgba(255,255,255,.05)}
-.hm i[data-l="1"]{background:rgba(139,92,246,.32)}
-.hm i[data-l="2"]{background:rgba(139,92,246,.62)}
-.hm i[data-l="3"]{background:#8b5cf6;box-shadow:0 0 6px rgba(139,92,246,.45)}
-.hm i[data-l="4"]{background:#22d3ee;box-shadow:0 0 8px rgba(34,211,238,.55)}
-.hm-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;font-size:11.5px;color:var(--muted-2);flex-wrap:wrap}
+.proof-stats{display:grid;gap:var(--s4);align-content:center}
+.pstat{display:grid;gap:3px;font-size:var(--fs-sm);color:var(--muted);white-space:nowrap}
+.pstat b{
+  font-size:var(--fs-2xl);font-weight:700;color:var(--text-hi);
+  line-height:1;letter-spacing:-.03em;
+}
+@media(max-width:860px){
+  .proof-card{grid-template-columns:1fr;padding:var(--s4)}
+  .proof-stats{grid-auto-flow:column;grid-auto-columns:1fr;gap:var(--s3)}
+  .pstat b{font-size:var(--fs-xl)}
+}
+@media(max-width:520px){
+  .proof-stats{grid-auto-flow:row;gap:var(--s3)}
+  .pstat{display:flex;align-items:baseline;gap:9px}
+}
+
+/* the heatmap is a labelled figure now, not a bare grid of squares. v2 drew a
+   fixed 370-day window at a fixed 10px cell, which put 686px of grid inside a
+   1004px card (318px of dead space) with no month row and no weekday gutter,
+   and its empty cells sat at about 1.12:1 against the card so most of the year
+   read as an undifferentiated void with a bright blob stuck to one end. */
+/* cell and gap live on the figure so the month row can share the exact column
+   rhythm of the grid it labels */
+.hm-fig{
+  --cell:clamp(9px,1.5vw,15px); --cgap:clamp(2px,.28vw,3px);
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 9px;
+}
+.hm-months{
+  grid-area:1/2;display:grid;grid-auto-flow:column;
+  grid-auto-columns:var(--cell);gap:var(--cgap);width:max-content;
+  font-size:var(--fs-2xs);color:var(--muted-2);line-height:1;
+}
+.hm-months span{overflow:hidden;white-space:nowrap}
+.hm-days{
+  grid-area:2/1;display:grid;grid-template-rows:repeat(7,1fr);align-items:center;
+  font-size:10.5px;color:var(--muted-2);line-height:1;text-align:right;
+}
+.hm-scroll{grid-area:2/2;min-width:0;overflow-x:auto}
+/* the cell scales with the viewport but is capped, so the figure stays legible
+   at 360px and never inflates into 47px squares on a wide card */
+.hm{
+  display:grid;grid-template-rows:repeat(7,var(--cell));
+  grid-auto-flow:column;grid-auto-columns:var(--cell);gap:var(--cgap);
+  width:max-content;
+}
+.hm i{border-radius:2px;background:var(--e1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+/* a real sequential ramp: monotonic in lightness with a small hue drift. v2's
+   top step jumped to cyan, which is a hue change, not a step up, so the busiest
+   days did not read as the busiest days. */
+.hm i[data-l="1"]{background:#3a2d63;box-shadow:none}
+.hm i[data-l="2"]{background:#5940a4;box-shadow:none}
+.hm i[data-l="3"]{background:#7c5cf0;box-shadow:none}
+.hm i[data-l="4"]{background:#a98fff;box-shadow:0 0 10px -2px rgba(169,143,255,.75)}
+.hm-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:var(--s3);font-size:var(--fs-2xs);color:var(--muted-2);flex-wrap:wrap}
 .hm-legend{display:inline-flex;align-items:center;gap:4px}
-.hm-legend i{width:10px;height:10px;border-radius:2.5px;display:inline-block}
+.hm-legend i{width:10px;height:10px;border-radius:2px;display:inline-block;background:var(--e1);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
 
 /* ==========================================================================
    about: copy + tilt playing cards (the only tilting surface)
    ========================================================================== */
-.about-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:36px;align-items:center}
-.about-copy p{color:var(--muted);font-size:15.5px;line-height:1.7;margin-bottom:14px}
-.about-copy p strong{color:var(--text);font-weight:600}
+.about-grid{display:grid;grid-template-columns:minmax(0,50ch) minmax(0,1fr);gap:var(--s4) var(--s7);align-items:start}
+/* v2's About column was the only text block on the page with no ch cap, so its
+   measure ran past 100 characters in the tablet band */
+.about-copy p{color:var(--muted);font-size:var(--fs-md);line-height:var(--lh-body);margin-bottom:var(--s3);max-width:58ch}
+.about-copy p:first-child{color:var(--lead)}
+.about-copy p strong{color:var(--text-hi);font-weight:600}
+
+/* the process flow replaces the fanned deck. The deck overlapped its own cards
+   by 72% at every width, so two of the three were literally unreadable, and
+   three cards restating the work section said nothing a client needed. Every
+   line here is a fact already stated elsewhere on the page. */
+.flow{list-style:none;display:grid}
+.flow li{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s3);align-items:start;
+  padding:var(--s3) 0;border-top:1px solid var(--border);
+}
+.flow li:first-child{border-top:none;padding-top:0}
+.flow .n{
+  width:29px;height:29px;border-radius:50%;display:grid;place-items:center;
+  font-family:var(--font-mono);font-size:var(--fs-xs);font-weight:700;
+  color:var(--accent-hot);background:var(--e1);box-shadow:var(--rim-1);
+}
+.flow b{display:block;font-size:var(--fs-md);color:var(--text-hi);font-weight:600;letter-spacing:-.012em}
+.flow .d{display:block;color:var(--muted);font-size:var(--fs-sm);line-height:1.56;margin-top:4px;max-width:44ch}
 .thesis{
   margin-top:18px;padding:14px 18px;border-left:2px solid var(--accent);border-radius:0 10px 10px 0;
   background:linear-gradient(90deg,var(--accent-soft),transparent 70%);
   font-weight:600;font-size:15px;color:var(--accent-hot);letter-spacing:.01em;
 }
-.deck{position:relative;display:grid;place-items:center;min-height:340px;perspective:900px}
-.tcard{
-  position:absolute;width:min(230px,60vw);aspect-ratio:5/7;border-radius:18px;padding:20px;
-  background:linear-gradient(160deg,var(--panel-2),var(--panel) 60%,#0f0c18);
-  border:1px solid var(--border-strong);box-shadow:0 20px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
-  transform:rotate(var(--rot,0deg)) translate3d(var(--tx,0px),var(--ty,0px),0) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-  transform-style:preserve-3d;
-  transition:transform var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), box-shadow var(--t-fast) var(--ease-out);
-  display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
-}
-.tcard:hover{border-color:var(--accent-line);box-shadow:0 26px 60px rgba(0,0,0,.6), 0 0 30px rgba(139,92,246,.22), inset 0 1px 0 rgba(255,255,255,.1);z-index:5}
-.tcard .glare{position:absolute;inset:-40%;pointer-events:none;opacity:0;
-  background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.13) 50%,transparent 58%);
-  transform:translate3d(var(--gx,0%),0,0);transition:opacity .3s var(--ease-out)}
-.tcard:hover .glare{opacity:1}
-.tcard .pip{font-size:20px;font-weight:800;color:var(--accent-hot);letter-spacing:-.02em}
-.tcard .pip.flip{align-self:flex-end;transform:rotate(180deg)}
-.tcard .face{display:grid;place-items:center;gap:10px;text-align:center}
-.tcard .face svg{width:44px;height:44px;color:var(--accent-hot);filter:drop-shadow(0 0 12px var(--accent-glow))}
-.tcard .face b{font-size:15px;letter-spacing:-.01em}
-.tcard .face span{font-size:12px;color:var(--muted);line-height:1.5}
-.tcard.t1{--rot:-8deg;--tx:-64px;--ty:6px}
-.tcard.t2{--rot:0deg;--ty:-8px;z-index:2}
-.tcard.t3{--rot:8deg;--tx:64px;--ty:10px}
-.tcard.t3 .face svg{color:var(--cyan);filter:drop-shadow(0 0 12px rgba(34,211,238,.5))}
-.tcard.t3 .pip{color:var(--cyan)}
 
 /* ==========================================================================
    services + marquee, stack
    ========================================================================== */
-.svc-card{border-radius:var(--radius);padding:10px 24px;background:var(--glass);border:1px solid var(--border);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:var(--shadow)}
+/* the price list is a well, not a raised card: it sits at the bottom of the
+   elevation ladder so the things above it can outrank it */
+.svc-card{border-radius:var(--radius);padding:var(--s2) var(--s4);background:var(--e1);box-shadow:var(--rim-1)}
 .svc{
   display:flex;justify-content:space-between;align-items:baseline;gap:16px;
   padding:14px 12px;margin-inline:-12px;border-radius:10px;font-size:15px;
@@ -726,21 +1143,71 @@ body.blacksite{background:#000}
 .marq-track span{display:flex;align-items:center;gap:34px;font-size:13px;color:var(--muted);white-space:nowrap;letter-spacing:.04em}
 .marq-track em{font-style:normal;color:var(--accent-line)}
 @keyframes marq{to{transform:translateX(-50%)}}
+/* Stack was a peer section: the same 60px of air, the same header, the same
+   hairline as Work, for 70px of chips. It is a labelled rail now. */
+.stack-rail{display:grid;grid-template-columns:minmax(0,140px) minmax(0,1fr);gap:var(--s4);align-items:start}
+#stack .sec-kicker::after{display:none}
+@media(max-width:700px){ .stack-rail{grid-template-columns:1fr;gap:var(--s3)} }
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{
-  border:1px solid var(--border);border-radius:999px;padding:6px 14px;font-size:13px;color:var(--muted);background:rgba(255,255,255,.02);
-  transition:color var(--t-fast) var(--ease-out), border-color var(--t-fast) var(--ease-out), transform var(--t-fast) var(--spring), box-shadow var(--t-fast) var(--ease-out);
+  border-radius:999px;padding:7px 15px;font-size:var(--fs-sm);color:var(--muted);background:var(--e1);box-shadow:var(--rim-1);
+  transition:color var(--t-fast) var(--ease-out), background var(--t-fast) var(--ease-out), transform var(--t-fast) var(--spring-soft), box-shadow var(--t-fast) var(--ease-out);
 }
-.chip:hover{color:var(--text);border-color:var(--accent-line);transform:translateY(-2px);box-shadow:0 0 16px rgba(139,92,246,.22)}
+.chip:hover{color:var(--text-hi);background:var(--e2);transform:translateY(-2px);box-shadow:var(--rim-2), 0 0 16px -4px var(--accent-glow)}
 
 /* ==========================================================================
    contact band
    ========================================================================== */
+/* the conversion surface: top of the elevation ladder, and the one object on
+   the page with continuous life. backdrop-filter stays here and on the nav
+   scrim, and nowhere else, which took the page from a dozen concurrent blur
+   passes over an animated canvas down to two. */
 .band{
-  position:relative;text-align:center;border-radius:24px;padding:58px 26px;overflow:hidden;isolation:isolate;
-  border:1px solid var(--accent-line);background:rgba(16,12,28,.3);
+  position:relative;text-align:center;border-radius:var(--radius-xl);padding:var(--s7) var(--s4);overflow:hidden;isolation:isolate;
+  background:rgba(16,12,28,.42);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-  box-shadow:var(--glow), 0 30px 70px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.08);
+  /* a static ring under the sheen: the conic is transparent for most of its
+     sweep, so without a base the border would only exist where the light is */
+  box-shadow:0 0 0 1px color-mix(in oklab, var(--accent) 34%, transparent), var(--rim-3), var(--sh-3), 0 0 44px -14px var(--accent-glow);
+}
+/* a slow conic sheen around the edge, driven by a registered angle so the
+   browser can actually interpolate it. An untyped custom property is a string
+   and would snap rather than rotate. */
+.band::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;padding:1px;pointer-events:none;z-index:2;
+  background:conic-gradient(from var(--sheen), transparent 0deg, var(--accent-2) 46deg, var(--cyan) 78deg, transparent 140deg, transparent 360deg);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);mask-composite:exclude;
+  animation:bandSheen 16s linear infinite;
+}
+@keyframes bandSheen{to{--sheen:360deg}}
+
+/* ---- all roads lead to husky --------------------------------------------
+   His motto, and already the best motion on the site: the first-visit loader
+   draws eight converging roads and a secret word draws sixteen more in canvas.
+   Both were invisible to anyone who did not type the magic word or arrive on a
+   fresh browser. It becomes the page's ending instead: scroll into the ask and
+   every road arrives at one point.
+
+   Uses the band's own view timeline, so the roads are scrubbed by the reader
+   rather than played on a loop. Each road carries an --i and offsets its own
+   range, which is the only thing that staggers inside a scrubbed timeline. */
+.roads{position:absolute;inset:0;z-index:-1;pointer-events:none;overflow:hidden;opacity:.55}
+.road{
+  position:absolute;left:50%;top:50%;height:1.5px;width:70vmax;transform-origin:0 50%;
+  rotate:var(--a);scale:1 1;
+  background:linear-gradient(90deg,
+    color-mix(in oklab, var(--accent-2) 78%, transparent),
+    color-mix(in oklab, var(--cyan) 30%, transparent) 55%,
+    transparent 88%);
+}
+@supports (animation-timeline: view()){
+  .band{view-timeline-name:--bandv;view-timeline-axis:block}
+  .road{
+    animation:roadGrow linear both;animation-timeline:--bandv;
+    animation-range:entry calc(18% + var(--i,0)*2.6%) cover calc(34% + var(--i,0)*2.6%);
+  }
+  @keyframes roadGrow{from{scale:0 1}to{scale:1 1}}
 }
 .band::before{content:'';position:absolute;inset:0;z-index:-1;background:var(--charge-soft);opacity:.38;pointer-events:none}
 .band-grid{
@@ -761,23 +1228,46 @@ body.blacksite{background:#000}
 /* ==========================================================================
    footer: oversized wordmark, colophon, the seal
    ========================================================================== */
-footer{position:relative;z-index:3;margin-top:72px;padding:10px 0 44px;border-top:1px solid var(--border);background:rgba(6,5,9,.5)}
-/* padding-bottom keeps the y descender inside the reveal mask */
-.bigword-wrap{overflow:hidden;line-height:1;text-align:center;padding:24px 0 .1em}
+footer{position:relative;z-index:3;margin-top:var(--s7);padding:var(--s2) 0 var(--s5);border-top:1px solid var(--border);background:rgba(6,5,9,.5)}
+/* the wordmark is anchored to the page gutters, not centred on the viewport.
+   v2 centred it on 100vw while the colophon centred inside 1100px, so the two
+   sat on different axes and the mismatch read as a large dead zone at the
+   bottom of the page. Now it shares its left edge with every other line. */
+.bigword-wrap{
+  overflow:hidden;line-height:1;
+  padding-inline:max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+  padding-block:var(--s3) .08em;
+}
 .bigword{
-  display:inline-block;font-size:clamp(72px,17vw,250px);font-weight:800;letter-spacing:-.05em;
-  background:linear-gradient(180deg,#f3f1fb 30%,rgba(139,92,246,.55));
+  display:block;font-size:var(--fs-mega);
+  /* light and wide rather than 800: at 280px, weight 800 is a wall. Letting it
+     recede is what stops it competing with the h1 for the page's loudest voice. */
+  font-weight:340;letter-spacing:clamp(-.055em,-.07em + .04vw,-.03em);
+  background:linear-gradient(180deg,#f3f1fb 26%,rgba(167,139,250,.82));
   -webkit-background-clip:text;background-clip:text;color:transparent;
   transition:filter var(--t-fast) var(--ease-out);
-  -webkit-text-stroke:1px rgba(196,181,253,.0);
+}
+/* text-box-trim cuts the font's built-in leading so the box hugs the glyphs,
+   which is where most of the old dead space came from */
+@supports (text-box: trim-both cap alphabetic){
+  .bigword{text-box:trim-both cap alphabetic}
+  .bigword-wrap{padding-block:var(--s4) 0}
 }
 .bigword:hover{filter:drop-shadow(0 0 34px rgba(139,92,246,.45))}
-.foot-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:26px}
-.foot-links{display:flex;gap:18px;flex-wrap:wrap}
-.foot-links a{color:var(--muted);transition:color var(--t-fast) var(--ease-out)}
-.foot-links a:hover{color:var(--text)}
-.foot-note{margin-top:16px;font-size:12px;color:var(--muted-2);line-height:1.7;max-width:70ch}
+/* it is a link and it had no focus state at all */
+.bigword:focus-visible{outline:2px solid var(--accent-hot);outline-offset:6px;border-radius:8px}
+/* the colophon shares the wordmark's gutters rather than sitting inside the
+   1100px column, so the two finally agree on a left edge. That mismatch was
+   the whole reason the footer read as a dead zone. */
+.foot-inner{padding-inline:max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right))}
+.foot-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:var(--s4) var(--s6);margin-top:var(--s4)}
+.foot-row{display:flex;flex-direction:column;gap:var(--s2);align-items:flex-start;font-size:var(--fs-sm);color:var(--muted)}
+.foot-links{display:grid;gap:9px}
+.foot-links a{color:var(--muted);transition:color var(--t-fast) var(--ease-out);width:fit-content}
+.foot-links a:hover{color:var(--text-hi)}
+.foot-note{font-size:var(--fs-xs);color:var(--muted-2);line-height:1.7;max-width:56ch;margin:0}
 .foot-note b{color:var(--muted);font-weight:600}
+@media(max-width:760px){ .foot-grid{grid-template-columns:1fr;gap:var(--s4)} }
 
 .seal{margin-top:24px;padding-top:20px;border-top:1px solid var(--border)}
 .seal-btn{display:inline-flex;align-items:center;gap:9px;font-size:11.5px;letter-spacing:.02em;color:var(--muted);padding:6px 0;transition:color var(--t-fast) var(--ease-out);font-variant-numeric:tabular-nums;text-align:left}
@@ -826,7 +1316,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 .pal-input svg{width:16px;height:16px;color:var(--muted);flex:0 0 auto}
 .pal-input input{flex:1;background:none;border:none;color:var(--text);font:inherit;font-size:15px;outline:none}
 .pal-input input::placeholder{color:var(--muted-2)}
-.pal-input kbd{font-family:var(--font);font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:5px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted)}
+.pal-input kbd{font-size:10.5px;font-weight:600;padding:3px 7px;border-radius:5px;border:1px solid var(--border-strong);background:var(--panel-2);color:var(--muted)}
 .pal-list{max-height:min(340px,50vh);overflow-y:auto;padding:8px}
 .pal-group{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted-2);padding:10px 12px 5px}
 .pal-item{
@@ -946,8 +1436,29 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
    reveal system: scroll-driven where the platform has it, IO fallback else
    ========================================================================== */
 @supports (animation-timeline: view()){
-  .js .reveal{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 55%}
-  @keyframes rise{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+  /* fill is BACKWARDS, not both. With `both`, the animation stays in its after
+     phase forever once the element has entered, and a filled animation outranks
+     every normal declaration, so `.wcard:hover{transform:translateY(-3px)}`
+     silently stopped working on every card the moment it revealed. Backwards
+     fills only the before phase: past the range the element goes back to its
+     own styles, and hover is alive again. The end keyframe already matches the
+     resting state, so nothing jumps. */
+  .js .reveal{
+    animation:rise linear backwards;animation-timeline:view();
+    /* the stagger has to live in the RANGE. transition-delay does nothing
+       inside a scrubbed timeline, so v2's per-card --i was dead code in Chrome
+       and all twenty revealed surfaces moved as one block. */
+    animation-range:entry calc(var(--i,0)*4%) entry calc(52% + var(--i,0)*4%);
+  }
+  /* the reveal moves `translate`, not `transform`. They are independent
+     properties that compose, so a card can be mid-reveal and still take a
+     hover lift on `transform` without either one clobbering the other. Using
+     `transform` here is what made the hover state dead in v2, and no fill-mode
+     tweak fixes that: an active animation outranks a normal declaration. */
+  @keyframes rise{from{opacity:0;translate:0 30px}to{opacity:1;translate:none}}
+  /* cards come in with a lateral component so a row reads as a row */
+  .js .wcard.reveal{animation-name:riseSide}
+  @keyframes riseSide{from{opacity:0;translate:calc(var(--i,0)*6px - 9px) 34px}to{opacity:1;translate:none}}
 }
 @supports not (animation-timeline: view()){
   .js .reveal{opacity:0;transform:translateY(22px);transition:opacity .66s var(--ease-out), transform .66s var(--ease-out);transition-delay:var(--d,0ms)}
@@ -958,17 +1469,13 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
    responsive
    ========================================================================== */
 @media(max-width:900px){
-  .about-grid{grid-template-columns:1fr;gap:26px}
-  .deck{min-height:300px;margin-top:8px}
+  .about-grid{grid-template-columns:1fr;gap:var(--s5)}
 }
 @media(max-width:640px){
-  .grid{grid-template-columns:1fr}
-  .hero{padding-top:70px}
   .bigword-wrap{padding-top:16px}
 }
 @media(max-width:420px){
   .ms-board{grid-template-columns:repeat(9,minmax(28px,1fr));gap:3px;width:100%}
-  .tcard.t1{--tx:-46px} .tcard.t3{--tx:46px}
 }
 
 /* ==========================================================================
@@ -978,8 +1485,16 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   body{background:#fff;color:#111}
   .atmo,.grain,#fxgl,#fx2d,.progress,.mascot,.marq,.kbd-pill,.stars-css,dialog{display:none!important}
   .grad,.bigword,.foot-brand{background:none;-webkit-background-clip:initial;background-clip:initial;color:#111;-webkit-text-fill-color:#111;filter:none;animation:none}
-  .wcard,.svc-card,.proof-card,.band,.tcard{background:#fff;border-color:#ccc;box-shadow:none;backdrop-filter:none}
-  .wcard p,.about-copy p,.note,.band p{color:#333}
+  /* the elevation ladder is light on a dark field, so on paper it all has to
+     collapse back to a hairline: every surface now carries its edge in a
+     box-shadow or a masked gradient rather than a border */
+  .wcard,.svc-card,.proof-card,.band,.plate,.shot,.chip,.pstat,.flow .n{
+    background:#fff!important;border:1px solid #ccc;box-shadow:none!important;backdrop-filter:none;
+  }
+  .wcard::after,.band::after,.band-grid{display:none!important}
+  .wcard p,.about-copy p,.note,.band p,.flow .d,.pstat{color:#333}
+  .sec-lede,.wcard h3,.pstat b,.flow b{color:#111}
+  .hm i{box-shadow:none;border:1px solid #ddd}
 }
 
 /* ==========================================================================
@@ -991,7 +1506,15 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   .grain{animation:none}
   #fxgl,#fx2d{display:none!important}
   .js.fx-on .stars-css{display:block}
-  .js .reveal,.js.pre .hero h1 .li,.js.pre .hero .h-fade{opacity:1!important;transform:none!important}
+  /* neutralise the reveal on the property the reveal actually uses. v2 nuked
+     `transform` here, which also killed every hover lift and every magnetic
+     offset for reduced-motion users: a 3px hover response is feedback, not
+     motion sickness, and they should still get it. */
+  .js .reveal,.js.pre .hero h1 .li,.js.pre .hero .h-fade{opacity:1!important;translate:none!important}
+  .js.pre .hero h1 .li{transform:none!important}
+  .band::after{animation:none!important}
+  /* the roads arrive already drawn: the picture survives, the motion does not */
+  .road{animation:none!important;scale:1 1!important}
   .marq-track{animation-play-state:paused}
   .mag,.mag .mlbl{transform:none!important}
   .progress{display:none}
@@ -1065,11 +1588,12 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   </div>
 </nav>
 
-<main class="wrap">
+<main class="bands">
 
   <!-- ================= hero ================= -->
   <header class="hero">
     <div class="depth">
+      <div class="hero-copy">
       <span class="tag h-fade" style="--i:0"><span class="dot"></span> <span data-scramble>open for commissions</span></span>
       <h1>
         <span class="l"><span class="li" style="--i:0">hey, I'm <span class="grad">Husky</span>.</span></span>
@@ -1078,7 +1602,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       <p class="sub h-fade" style="--i:1">Full-stack web apps, Discord bots, Roblox systems, and automations.
       Everything below is live, built solo, and clickable. Tell me what you need and I'll quote it straight.</p>
       <div class="cta h-fade" style="--i:2">
-        <a class="btn btn-primary mag" href="mailto:husky@snapwyrm.com?subject=Commission"><span class="mlbl">
+        <a class="btn btn-primary mag" href="mailto:husky@snapwyrm.com?subject=Commission&body=What%20I%27m%20building%3A%0A%0ABudget%20range%3A%0A%0ADeadline%3A%0A%0ALinks%20or%20references%3A%0A"><span class="mlbl">
           <svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
           Email me</span>
         </a>
@@ -1087,60 +1611,68 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           <span class="lbl">Discord: smthusky</span>
         </button>
       </div>
-      <button class="mascot h-fade" style="--i:3" type="button" id="mascotBtn" aria-label="The husky mascot. He reacts. Be nice to him, or don't, your call.">
-        <span class="rig" id="mRig"><span class="pose" id="mPose"><img id="mBack" class="back" src="/assets/mascot/husky-blink.webp" alt="" width="512" height="512" decoding="async"><img id="mFront" src="/assets/mascot/husky-base.webp" alt="" width="512" height="512" decoding="async"></span></span>
-      </button>
       <p class="trustline h-fade" style="--i:4">
         <span data-scramble>available now</span> <span class="sep"></span> remote <span class="sep"></span> EST
       </p>
+      </div><!-- /.hero-copy -->
+      <button class="mascot h-fade" style="--i:3" type="button" id="mascotBtn" aria-label="The husky mascot. He reacts. Be nice to him, or don't, your call.">
+        <span class="rig" id="mRig"><span class="pose" id="mPose"><img id="mBack" class="back" src="/assets/mascot/husky-blink.webp" alt="" width="512" height="512" decoding="async"><img id="mFront" src="/assets/mascot/husky-base.webp" alt="" width="512" height="512" decoding="async"></span></span>
+      </button>
     </div>
   </header>
 
   <!-- ================= work ================= -->
-  <section class="sec" id="work">
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>Work</h2></div>
-    <div class="grid" id="workGrid">
+  <section class="sec bands" id="work">
+    <div class="sec-head reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>Work</span>
+        <span class="sec-lede">Six things I built. Three of them you can open right now.</span>
+      </h2>
+    </div>
+    <div class="grid b-wide" id="workGrid">
 
-      <article class="wcard wide linked reveal">
+      <!-- tier 1: the flagship. A brand plate rather than a screenshot, because
+           Snapwyrm is a live site and the mark is the honest thing to show. -->
+      <article class="wcard flag linked reveal" style="--i:0">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
-        <div class="ico ico-img"><img src="data:image/webp;base64,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" alt="" width="160" height="160" loading="lazy" decoding="async"></div>
-        <h3><a href="https://snapwyrm.com" target="_blank" rel="noopener"><span class="sr">Snapwyrm</span><img class="wordmark" src="data:image/webp;base64,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" alt="" width="188" height="72" loading="lazy" decoding="async">
-          <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </a></h3>
-        <div class="kicker violet">flagship · live</div>
-        <p>A provably-fair arcade platform built end to end, solo. React frontend, Cloudflare Pages Functions
-        backend, D1 SQL, realtime multiplayer blackjack, user accounts, a full admin ops dashboard, payment
-        integration, and compliance gates (18+, geo, self-exclusion). The Discord bot and the Roblox game
-        below plug into this same economy.</p>
-        <span class="visit">snapwyrm.com</span>
+        <figure class="plate">
+          <span class="chrome" aria-hidden="true"><i></i><i></i><i></i><b>snapwyrm.com</b></span>
+          <span class="plate-body"><img src="/assets/work/snapwyrm-mark.webp" alt="The Snapwyrm dragon mark and wordmark" width="1000" height="383" loading="lazy" decoding="async"></span>
+        </figure>
+        <div class="flag-copy">
+          <h3><a href="https://snapwyrm.com" target="_blank" rel="noopener">Snapwyrm <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></h3>
+          <div class="kicker">flagship &middot; live</div>
+          <p>A provably-fair arcade platform built end to end, solo. React frontend, Cloudflare Pages Functions
+          backend, D1 SQL, realtime multiplayer blackjack, user accounts, a full admin ops dashboard, payment
+          integration, and compliance gates (18+, geo, self-exclusion). The Discord bot and the Roblox game
+          below plug into this same economy.</p>
+          <span class="visit">snapwyrm.com</span>
+        </div>
       </article>
 
-      <article class="wcard wide linked os reveal" style="--d:40ms">
+      <!-- tier 2: the pair that can be seen -->
+      <article class="wcard med linked os reveal" style="--i:1;--d:40ms;--ca:#4da3ff;--ca-2:#8ec5ff">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
-        <div class="ico os-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4M8 4h8"/><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M9 13.5h.01M15 13.5h.01"/><path d="M9.5 17h5"/></svg></div>
-        <h3><a href="https://offsiteai.io" target="_blank" rel="noopener">Offsite<span class="os-ai">AI</span>
-          <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </a></h3>
-        <div class="kicker os-k">co-built · live</div>
+        <figure class="shot"><img src="/assets/work/offsiteai.webp" alt="The OffsiteAI chat widget answering a customer and turning the conversation into a lead" width="765" height="602" loading="lazy" decoding="async"></figure>
+        <h3><a href="https://offsiteai.io" target="_blank" rel="noopener">Offsite<span class="os-ai">AI</span> <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></h3>
+        <div class="kicker">co-built &middot; live</div>
         <p>An AI worker for contracting businesses: answers customer questions, gives instant
         estimates, and books appointments on the site, 24/7. Built with a partner, live at
         offsiteai.io.</p>
         <span class="visit">offsiteai.io</span>
       </article>
 
-      <article class="wcard linked reveal" style="--d:80ms">
+      <article class="wcard med linked reveal" style="--i:2;--d:80ms;--ca:#22d3ee;--ca-2:#8ef0fb">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
-        <div class="ico ico-img photo"><img src="data:image/webp;base64,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" alt="" width="180" height="180" loading="lazy" decoding="async"></div>
-        <h3><a href="https://www.roblox.com/games/102439634201559/Huskys-Minesweeper" target="_blank" rel="noopener">Husky's Minesweeper
-          <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg>
-        </a></h3>
-        <div class="kicker cyan">live on Roblox</div>
+        <figure class="shot"><img src="/assets/work/minesweeper.webp" alt="A Husky&#39;s Minesweeper board in play, numbers and flags across a neon grid" width="767" height="270" loading="lazy" decoding="async"></figure>
+        <h3><a href="https://www.roblox.com/games/102439634201559/Huskys-Minesweeper" target="_blank" rel="noopener">Husky&rsquo;s Minesweeper <svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></h3>
+        <div class="kicker">live on Roblox</div>
         <p>A minesweeper game in Lua with a 1,000+ member community and cross-platform account linking:
         site roles and badges sync in-game through a secured API.</p>
         <span class="visit">roblox.com</span>
       </article>
 
-      <article class="wcard reveal" style="--d:120ms">
+      <article class="wcard mini reveal" style="--i:3;--d:120ms;--ca:#5865f2;--ca-2:#a3aaf9">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2-3a8 8 0 1 1 15-5Z"/><path d="M8.5 12h.01M12 12h.01M15.5 12h.01"/></svg></div>
         <h3>Discord bots</h3>
@@ -1149,7 +1681,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         servers, including one wired into a live web economy with audited transfers.</p>
       </article>
 
-      <article class="wcard reveal" style="--d:160ms">
+      <article class="wcard mini reveal" style="--i:4;--d:160ms;--ca:#34d399;--ca-2:#8beac4">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2.5"/><path d="M6.8 6.8a7.3 7.3 0 0 0 0 10.4M17.2 17.2a7.3 7.3 0 0 0 0-10.4"/><path d="M3.9 3.9a11.4 11.4 0 0 0 0 16.2M20.1 20.1a11.4 11.4 0 0 0 0-16.2"/></svg></div>
         <h3>Stream + social automation</h3>
@@ -1158,7 +1690,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         and account-growth automations. If it has an API (and even if it doesn't), I can automate it.</p>
       </article>
 
-      <article class="wcard reveal" style="--d:200ms">
+      <article class="wcard mini reveal" style="--i:5;--d:200ms">
         <span class="spot" aria-hidden="true"></span><span class="ring" aria-hidden="true"></span>
         <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
         <h3>Snapwyrm DOM</h3>
@@ -1172,26 +1704,40 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   </section>
 
   <!-- ================= proof of work (self-gating: JS unhides when the data earns it) ================= -->
-  <section class="sec" id="proof" hidden>
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>Proof of work</h2></div>
+  <section class="sec bands" id="proof" hidden>
+    <div class="sec-head reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>Proof of work</span>
+        <span class="sec-lede">The commit history, live from GitHub.</span>
+      </h2>
+    </div>
     <div class="proof-card reveal">
       <div class="proof-stats">
-        <span class="pstat"><b id="pTotal">0</b> contributions, past year</span>
-        <span class="pstat"><b id="pStreak">0</b> day current streak</span>
-        <span class="pstat"><b id="pLongest">0</b> day longest streak</span>
+        <span class="pstat"><b id="pTotal">0</b> contributions</span>
+        <span class="pstat"><b id="pActive">0</b> active days</span>
+        <span class="pstat"><b id="pBusiest">0</b> on the busiest day</span>
       </div>
-      <div class="hm-scroll" tabindex="0" aria-label="Contribution heatmap, scrollable"><div class="hm" id="hm" role="img" aria-label="GitHub contribution heatmap"></div></div>
+      <figure class="hm-fig">
+        <div class="hm-months" id="hmMonths" aria-hidden="true"></div>
+        <div class="hm-days" aria-hidden="true"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span></div>
+        <div class="hm-scroll"><div class="hm" id="hm" role="img" aria-label="GitHub contribution heatmap"></div></div>
+      </figure>
       <div class="hm-foot">
         <span id="hmAsOf">live from GitHub, public and private repos, counts only</span>
-        <span class="hm-legend">less <i style="background:rgba(255,255,255,.05)"></i><i style="background:rgba(139,92,246,.32)"></i><i style="background:rgba(139,92,246,.62)"></i><i style="background:#8b5cf6"></i><i style="background:#22d3ee"></i> more</span>
+        <span class="hm-legend">less <i></i><i data-l="1"></i><i data-l="2"></i><i data-l="3"></i><i data-l="4"></i> more</span>
       </div>
     </div>
-    <script type="application/json" id="contribFallback">{"asOf":"2026-07-22","total":2,"days":{"2026-07-21":2}}</script>
+    <script type="application/json" id="contribFallback">{"asOf":"2026-07-22","total":1771,"days":{"2026-03-15":7,"2026-03-19":6,"2026-03-30":6,"2026-03-31":27,"2026-04-01":7,"2026-04-02":1,"2026-04-06":3,"2026-04-07":4,"2026-04-09":9,"2026-04-13":5,"2026-04-15":5,"2026-04-16":12,"2026-04-22":1,"2026-04-23":3,"2026-04-24":40,"2026-04-25":15,"2026-04-27":16,"2026-04-28":9,"2026-04-29":2,"2026-05-01":1,"2026-05-03":2,"2026-05-04":7,"2026-05-05":18,"2026-05-06":22,"2026-05-09":18,"2026-05-10":1,"2026-05-11":1,"2026-05-16":12,"2026-05-17":40,"2026-05-18":2,"2026-05-19":14,"2026-05-20":4,"2026-05-21":15,"2026-05-25":1,"2026-05-26":12,"2026-05-27":1,"2026-05-29":5,"2026-06-05":60,"2026-06-06":37,"2026-06-07":91,"2026-06-08":117,"2026-06-09":162,"2026-06-10":111,"2026-06-11":61,"2026-06-12":5,"2026-06-15":12,"2026-06-16":98,"2026-06-17":18,"2026-06-18":115,"2026-06-19":82,"2026-06-20":17,"2026-06-21":5,"2026-06-24":11,"2026-06-26":1,"2026-06-27":17,"2026-06-28":8,"2026-06-29":43,"2026-06-30":104,"2026-07-01":73,"2026-07-02":21,"2026-07-03":30,"2026-07-07":12,"2026-07-08":5,"2026-07-12":19,"2026-07-13":32,"2026-07-19":17,"2026-07-21":28,"2026-07-22":5}}</script>
   </section>
 
   <!-- ================= about ================= -->
-  <section class="sec" id="about">
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>About</h2></div>
+  <section class="sec bands" id="about">
+    <div class="sec-head reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>About</span>
+        <span class="sec-lede">Self-taught. I learn by shipping.</span>
+      </h2>
+    </div>
     <div class="about-grid">
       <div class="about-copy reveal">
         <p><strong>I'm Husky.</strong> Self-taught, and I learn by shipping: everything in the section above
@@ -1203,41 +1749,27 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         verify it. Everything I ship gets tested like someone else wrote it.</p>
         <p class="thesis">All roads lead to Husky.</p>
       </div>
-      <div class="deck reveal" id="deck" aria-label="Three cards: Snapwyrm, Husky's Minesweeper, and your project">
-        <div class="tcard t1">
-          <span class="glare" aria-hidden="true"></span>
-          <span class="pip">◆</span>
-          <span class="face">
-            <img class="face-img" src="data:image/webp;base64,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" alt="" width="160" height="160" loading="lazy" decoding="async">
-            <b>Snapwyrm</b><span>a provably-fair arcade, live at snapwyrm.com</span>
-          </span>
-          <span class="pip flip">◆</span>
-        </div>
-        <div class="tcard t2">
-          <span class="glare" aria-hidden="true"></span>
-          <span class="pip">◆</span>
-          <span class="face">
-            <img class="face-img photo" src="data:image/webp;base64,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" alt="" width="180" height="180" loading="lazy" decoding="async">
-            <b>Husky's Minesweeper</b><span>1,000+ player community on Roblox</span>
-          </span>
-          <span class="pip flip">◆</span>
-        </div>
-        <div class="tcard t3">
-          <span class="glare" aria-hidden="true"></span>
-          <span class="pip">+</span>
-          <span class="face">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-            <b>Your project</b><span>the next road gets built here</span>
-          </span>
-          <span class="pip flip">+</span>
-        </div>
-      </div>
+      <ol class="flow reveal" style="--i:1">
+        <li><span class="n">1</span><span><b>Tell me what you&rsquo;re building</b>
+          <span class="d">Discord is fastest, email works too. One paragraph is enough, I&rsquo;ll ask for the rest.</span></span></li>
+        <li><span class="n">2</span><span><b>Fixed quote back</b>
+          <span class="d">What it costs and when you&rsquo;ll have it, agreed before anything starts. No hourly billing.</span></span></li>
+        <li><span class="n">3</span><span><b>Half up front</b>
+          <span class="d">50% to begin, 50% on delivery.</span></span></li>
+        <li><span class="n">4</span><span><b>Built, tested, live</b>
+          <span class="d">Everything I ship gets tested like someone else wrote it, and it goes out running, not zipped.</span></span></li>
+      </ol>
     </div>
   </section>
 
   <!-- ================= services ================= -->
-  <section class="sec" id="services">
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>Services</h2></div>
+  <section class="sec bands" id="services">
+    <div class="sec-head reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>Services</span>
+        <span class="sec-lede">What things cost, and what you get for it.</span>
+      </h2>
+    </div>
     <div class="svc-card reveal">
       <div class="svc"><span>Discord bot (commands, economy, tickets, AI)</span><b>from $90</b></div>
       <div class="svc"><span>Web app, tool, or dashboard</span><b>from $120</b></div>
@@ -1256,28 +1788,51 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   </section>
 
   <!-- ================= stack ================= -->
-  <section class="sec" id="stack">
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>Stack</h2></div>
-    <div class="chips reveal">
+  <section class="sec bands" id="stack">
+    <div class="stack-rail reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>Stack</span>
+      </h2>
+    <div class="chips">
       <span class="chip">JavaScript</span><span class="chip">React</span><span class="chip">Node</span>
       <span class="chip">Cloudflare Workers + Pages</span><span class="chip">D1 / SQL</span>
       <span class="chip">Lua (Roblox)</span><span class="chip">Electron</span><span class="chip">Python</span>
       <span class="chip">Discord API</span><span class="chip">Shopify</span><span class="chip">AI-assisted dev</span>
     </div>
+    </div>
   </section>
 
   <!-- ================= contact ================= -->
-  <section class="sec" id="contact">
-    <div class="sec-head reveal"><span class="idx" aria-hidden="true"></span><h2>Contact</h2></div>
-    <div class="band reveal">
+  <section class="sec bands" id="contact">
+    <div class="sec-head reveal">
+      <h2 class="sec-h">
+        <span class="sec-kicker"><span class="idx" aria-hidden="true"></span>Contact</span>
+      </h2>
+    </div>
+    <div class="band b-wide reveal">
       <span class="band-grid" aria-hidden="true"></span>
-      <span class="corner tl" aria-hidden="true"></span><span class="corner tr" aria-hidden="true"></span>
-      <span class="corner bl" aria-hidden="true"></span><span class="corner br" aria-hidden="true"></span>
-      <h3 class="band-title">Tell me what you're building.</h3>
+      <span class="roads" aria-hidden="true">
+        <i class="road" style="--a:0deg;--i:0"></i>
+        <i class="road" style="--a:27deg;--i:1"></i>
+        <i class="road" style="--a:51deg;--i:2"></i>
+        <i class="road" style="--a:79deg;--i:3"></i>
+        <i class="road" style="--a:104deg;--i:4"></i>
+        <i class="road" style="--a:128deg;--i:5"></i>
+        <i class="road" style="--a:155deg;--i:6"></i>
+        <i class="road" style="--a:180deg;--i:7"></i>
+        <i class="road" style="--a:206deg;--i:8"></i>
+        <i class="road" style="--a:231deg;--i:9"></i>
+        <i class="road" style="--a:257deg;--i:10"></i>
+        <i class="road" style="--a:283deg;--i:11"></i>
+        <i class="road" style="--a:306deg;--i:12"></i>
+        <i class="road" style="--a:331deg;--i:13"></i>
+        <i class="road" style="--a:349deg;--i:14"></i>
+      </span>
+      <h3 class="band-title">Tell me what you&rsquo;re building.</h3>
       <p>Fastest is Discord. Tell me what you're trying to build, I'll tell you
       what it costs and when you'll have it.</p>
       <div class="cta">
-        <a class="btn btn-primary mag" href="mailto:husky@snapwyrm.com?subject=Commission"><span class="mlbl">
+        <a class="btn btn-primary mag" href="mailto:husky@snapwyrm.com?subject=Commission&body=What%20I%27m%20building%3A%0A%0ABudget%20range%3A%0A%0ADeadline%3A%0A%0ALinks%20or%20references%3A%0A"><span class="mlbl">
           <svg class="ico-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
           Email me</span>
         </a>
@@ -1293,20 +1848,22 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 
 <footer>
   <div class="bigword-wrap reveal"><a class="bigword" href="#top" aria-label="Back to top">husky</a></div>
-  <div class="wrap">
-    <div class="foot-row">
-      <span>Husky · Arden, NC · EST</span>
-      <div class="foot-links">
-        <a href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
-        <a href="https://snapwyrm.com" target="_blank" rel="noopener">snapwyrm.com</a>
-        <a href="https://github.com/snapwyrm/husky-page" target="_blank" rel="noopener">source of this page</a>
+  <div class="foot-inner">
+    <div class="foot-grid">
+      <p class="foot-note"><b>How this page is built:</b> no frameworks, no build step, one file.
+      The nebula is a hand-written WebGL shader, the starfield and the wyrm are a canvas engine
+      with a frame-time governor, the scroll choreography is native CSS scroll-driven animation,
+      and the palette is a native dialog. View source, it&rsquo;s all right there.
+      <span style="white-space:nowrap">built this page myself, obviously.</span></p>
+      <div class="foot-row">
+        <span>Husky &middot; Arden, NC &middot; EST</span>
+        <div class="foot-links">
+          <a href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
+          <a href="https://snapwyrm.com" target="_blank" rel="noopener">snapwyrm.com</a>
+          <a href="https://github.com/snapwyrm/husky-page" target="_blank" rel="noopener">source of this page</a>
+        </div>
       </div>
     </div>
-    <p class="foot-note"><b>How this page is built:</b> no frameworks, no build step, one file.
-    The nebula is a hand-written WebGL shader, the starfield and the wyrm are a canvas engine
-    with a frame-time governor, the scroll choreography is native CSS scroll-driven animation,
-    and the palette is a native dialog. View source, it's all right there.
-    <span style="white-space:nowrap">built this page myself, obviously.</span></p>
 
     <!-- the seal: provably-fair style commit-then-reveal, hidden unless the browser can do the crypto -->
     <div class="seal" id="seal" hidden>
@@ -2556,7 +3113,13 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       if (!motionOK) return;
       var r = rig.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       tx = clamp((e.clientX - cx) / 500, -1, 1); ty = clamp((e.clientY - cy) / 500, -1, 1); }, { passive: true });
-    if (motionOK) loop.add(function (dt, now) {
+    /* the rig tick. v2 added this once and never removed it, so it built a
+       five-part transform string and wrote it to the DOM every frame for the
+       life of the page, including the ~90% of the page where the mascot is off
+       screen. It sleeps now: an observer pulls it out of the shared loop when
+       he leaves the viewport and puts it back when he returns. The loop API
+       already supports add/remove and restarts itself on add. */
+    function rigTick(dt, now) {
       rx += (tx - rx) * .08; ry += (ty - ry) * .08; press += (pt - press) * .2;
       var dir = (tier >= 5 || black) ? -1.4 : 1;
       var bound = [4, 8, 12, 15, 18, 21, 24].find(function (b) { return b > heat; });
@@ -2564,8 +3127,21 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       var jx = simmer ? (Math.random() - .5) * simmer * 1.7 : 0, jy = simmer ? (Math.random() - .5) * simmer * 1.2 : 0;
       var bob = Math.sin((now - rt0) / 1700) * 4;
       rig.style.transform = 'translate(' + jx + 'px,' + (bob + jy) + 'px) rotate(' + (dir * rx * 5) + 'deg) translateX(' + (dir * rx * 8) + 'px) scale(' + press + ')';
-      rig.style.transformOrigin = '50% 80%';
-    });
+    }
+    if (motionOK) {
+      loop.add(rigTick);
+      if ('IntersectionObserver' in window) {
+        var rigAwake = true;
+        new IntersectionObserver(function (es) {
+          var vis = es[0].isIntersecting;
+          /* the blacksite pins him to the middle of a fixed overlay, so he must
+             never be put to sleep while he has the page */
+          if (vis === rigAwake || black) return;
+          rigAwake = vis;
+          if (vis) loop.add(rigTick); else { loop.remove(rigTick); rig.style.transform = ''; }
+        }, { rootMargin: '160px' }).observe(btn);
+      }
+    }
 
     /* idle machine */
     var hovering = false, busy = false, beat = 0;
@@ -2691,41 +3267,80 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     var GATE = 100; /* the section earns its place at 100+ contributions/yr */
     var sec = doc.getElementById('proof');
     if (!sec) return;
+    var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    /* below this many weeks the grid has nothing to say and would only argue
+       against him, so the section stays hidden rather than rendering a field
+       of empty cells with a bright cluster stuck to one end */
+    var MIN_WEEKS = 8;
+
     function render(data, liveData) {
       if (!data || data.total < GATE) return;
       var days = data.days || {};
       /* ALL date math in UTC: mixing local parsing with toISOString shifted the
          whole grid by a day for every viewer east of UTC */
       var end = new Date(data.asOf + 'T00:00:00Z');
-      var start = new Date(end); start.setUTCDate(start.getUTCDate() - 370);
-      while (start.getUTCDay() !== 0) start.setUTCDate(start.getUTCDate() + 1); /* align to Sunday */
-      var html = '', cur = new Date(start), maxStreak = 0, curStreak = 0, run = 0;
-      var lvl = function (n) { return n <= 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4; };
-      var dates = [];
+
+      /* window from the first day that actually has activity rather than a flat
+         370 back. An account whose history starts part way through the year is
+         the normal case, and drawing the dead months before it says something
+         untrue about how much he works. */
+      var keys = Object.keys(days).filter(function (k) { return (days[k] || 0) > 0; }).sort();
+      if (!keys.length) return;
+      var floor = new Date(end); floor.setUTCDate(floor.getUTCDate() - 370);
+      var first = new Date(keys[0] + 'T00:00:00Z');
+      var start = first > floor ? first : floor;
+      start.setUTCDate(start.getUTCDate() - 7);          /* one week of lead-in */
+      while (start.getUTCDay() !== 0) start.setUTCDate(start.getUTCDate() - 1); /* align to Sunday */
+
+      var dates = [], cur = new Date(start);
       while (cur <= end) {
-        var key = cur.toISOString().slice(0, 10);
-        dates.push(key);
+        dates.push(cur.toISOString().slice(0, 10));
         cur.setUTCDate(cur.getUTCDate() + 1);
       }
+      var weeks = Math.ceil(dates.length / 7);
+      if (weeks < MIN_WEEKS) return;
+
+      /* pad the first partial week so column one starts on a Sunday and the
+         weekday gutter lines up with the rows it labels */
+      var lvl = function (n) { return n <= 0 ? 0 : n <= 2 ? 1 : n <= 5 ? 2 : n <= 9 ? 3 : 4; };
+      var html = '', active = 0, busiest = 0;
       dates.forEach(function (key) {
         var n = days[key] || 0;
+        if (n > 0) { active++; if (n > busiest) busiest = n; }
         html += '<i data-l="' + lvl(n) + '" title="' + key + ': ' + n + '"></i>';
-        if (n > 0) { run++; if (run > maxStreak) maxStreak = run; } else run = 0;
       });
-      /* current streak: count back from asOf */
-      for (var i = dates.length - 1; i >= 0; i--) {
-        if ((days[dates[i]] || 0) > 0) curStreak++;
-        else if (i < dates.length - 1) break; /* today itself may be 0 without breaking */
+
+      /* month row: one cell per month, spanning the weeks it covers, so the
+         grid reads against a time axis instead of as noise */
+      var mHtml = '', span = 0, label = null;
+      for (var w = 0; w < weeks; w++) {
+        var d = new Date(start); d.setUTCDate(d.getUTCDate() + w * 7);
+        var m = d.getUTCMonth();
+        if (label === null) { label = m; span = 1; }
+        else if (m === label) { span++; }
+        else {
+          mHtml += '<span style="grid-column:span ' + span + '">' + (span >= 3 ? MONTHS[label] : '') + '</span>';
+          label = m; span = 1;
+        }
       }
-      doc.getElementById('hm').innerHTML = html;
-      doc.getElementById('hm').setAttribute('aria-label', 'GitHub contribution heatmap: ' + data.total + ' contributions in the past year');
+      if (label !== null) mHtml += '<span style="grid-column:span ' + span + '">' + (span >= 3 ? MONTHS[label] : '') + '</span>';
+      var months = doc.getElementById('hmMonths');
+      if (months) months.innerHTML = mHtml;
+
+      var grid = doc.getElementById('hm');
+      grid.innerHTML = html;
+      var since = MONTHS[start.getUTCMonth()] + ' ' + start.getUTCDate() + ', ' + start.getUTCFullYear();
+      grid.setAttribute('aria-label',
+        'GitHub contribution heatmap: ' + data.total + ' contributions, ' + active +
+        ' active days since ' + since + ', busiest day ' + busiest + '.');
+
       doc.getElementById('pTotal').textContent = data.total.toLocaleString('en-US');
-      doc.getElementById('pStreak').textContent = data.currentStreak != null ? data.currentStreak : curStreak;
-      doc.getElementById('pLongest').textContent = data.longestStreak != null ? data.longestStreak : maxStreak;
-      if (!liveData) doc.getElementById('hmAsOf').textContent = 'snapshot as of ' + data.asOf + ', public and private repos, counts only';
+      doc.getElementById('pActive').textContent = active;
+      doc.getElementById('pBusiest').textContent = busiest;
+      doc.getElementById('hmAsOf').textContent =
+        (liveData ? 'live from GitHub' : 'snapshot as of ' + data.asOf) +
+        ', since ' + since + ', public and private repos, counts only';
       sec.hidden = false;
-      var scroller = $('.hm-scroll', sec);
-      if (scroller) scroller.scrollLeft = scroller.scrollWidth;
     }
     function fallback() {
       try { render(JSON.parse(doc.getElementById('contribFallback').textContent), false); }
