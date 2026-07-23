@@ -376,19 +376,231 @@ body{counter-reset:sec}
 #mScan{display:none;position:fixed;inset:0;pointer-events:none;z-index:44;
   background:repeating-linear-gradient(0deg,rgba(255,255,255,.028) 0 1px,transparent 1px 3px)}
 
-/* the blacksite: he takes the page. Esc or the flickering light brings it back */
+/* ==========================================================================
+   THE BLACKSITE
+   A corrupted dark-twin of the real page. Everything here is decoration:
+   the live DOM is cloned, the clone is defiled, and the original is left
+   untouched and inert underneath. One intensity scalar (set by the mascot's
+   heartbeat) drives every effect so they breathe together instead of
+   averaging into noise.
+   Layer budget: at most 3 fullscreen blend layers, each owning a distinct
+   perceptual channel (geometry / luma / chroma / noise).
+   ========================================================================== */
 body.blacksite{background:#000}
 .blacksite .shell{visibility:hidden}
 .blacksite .atmo,.blacksite .grain,.blacksite #fxgl,.blacksite #fx2d,.blacksite .progress{display:none!important}
 .blacksite #mScan{display:block}
 .blacksite #mAura{opacity:1;background:radial-gradient(120% 100% at 50% 45%, rgba(120,0,30,.10) 0%, rgba(0,0,0,.92) 78%)}
 .blacksite .mascot{
-  position:fixed;visibility:visible;left:50%;top:50%;right:auto;width:min(64vw,380px);
-  transform:translate(-50%,-56%);z-index:60;
+  position:fixed;visibility:visible;left:50%;top:46%;right:auto;width:min(46vw,300px);
+  transform:translate(-50%,-50%);z-index:60;
 }
 .blacksite .mascot .pose{animation:bsBreathe 3.4s var(--ease-io) infinite}
 @keyframes bsBreathe{50%{transform:scale(1.02)}}
 .blacksite .mascot .pose img{filter:none}
+
+/* the stage. hidden entirely until he takes the page */
+#bsLayer{display:none}
+.blacksite #bsLayer{display:block;position:fixed;inset:0;z-index:45;pointer-events:none;overflow:hidden}
+
+/* ---- the mirror: a clone of his real hero, recolored into illness --------
+   Not grayscale-invert (the clearest tell of a cheap job). His own violet and
+   cyan pushed toward bruise and dead phosphor, so continuity registers before
+   wrongness does. Token override only, so the cloned markup needs no changes. */
+#bsMirror{
+  position:absolute;left:50%;top:8vh;transform:translateX(-50%) perspective(1200px) rotateX(1.5deg) scale(1.02);
+  width:min(1100px,92vw);padding-inline:24px;transform-origin:50% 30%;
+  --accent:#5b1030; --accent-2:#6d1938; --accent-hot:#8d2b4a;
+  --cyan:#7f9c6b; --mint:#6b8f5e; --text:#b9a9a6;
+  --muted:rgba(185,169,166,.5); --muted-2:rgba(185,169,166,.34);
+  --accent-line:rgba(120,20,50,.5); --accent-glow:rgba(120,20,50,.4);
+  --accent-soft:rgba(90,16,40,.16);
+  --charge:linear-gradient(135deg,#3a0a1c 0%,#5b1030 42%,#4a5c3a 100%);
+  color:var(--text);
+  contain:paint;
+}
+#bsMirror .tag{background:rgba(20,4,10,.72);border-color:rgba(120,20,50,.55);box-shadow:none}
+#bsMirror .tag .dot{background:#8f3a3a;box-shadow:0 0 8px #8f3a3a;animation:none}
+#bsMirror h1{color:var(--text)}
+/* his gradient name goes dead: the shimmer stops and the fill sickens */
+#bsMirror .grad{
+  background:linear-gradient(100deg,#7a1f3d,#4a5c3a,#7a1f3d);
+  background-size:100% auto;animation:none;filter:none;
+}
+#bsMirror .btn{background:#170509;border-color:rgba(120,20,50,.4);color:#8d7f7c;box-shadow:none}
+#bsMirror .btn-primary{background:var(--charge);color:#c3b3b0}
+#bsMirror .btn-primary::before{display:none}
+#bsMirror .mascot{display:none} /* the real rig is centered separately */
+/* Per-glyph cells. The width is pinned in JS to each character's own measured
+   width, not to 1ch: a flat 1ch inflates every narrow letter and pushes the
+   headline off a phone screen. Overflow is clipped so a combining mark can
+   never bleed into the line above. */
+#bsMirror [data-glyph]{display:inline-block;text-align:center;overflow:clip}
+/* the clone inherits the real hero's ch-based measures, which are wider than a
+   phone's content box, so it would clip mid-word: pin everything to the box */
+/* Pinned-width glyph cells do not wrap as cleanly as plain text, so the lines
+   are clipped to their own box: this layer is aria-hidden decoration, and a
+   sentence running off the edge of a broken transmission is on theme. The
+   headline is clipped too, so a stacked combining mark cannot bleed upward. */
+#bsMirror h1,#bsMirror .sub,#bsMirror .trustline{overflow:clip;contain:paint;max-width:100%}
+#bsMirror .sub{font-size:clamp(11px,1.6vw,16px)}
+@media(max-width:640px){
+  #bsMirror{top:5vh}
+  #bsMirror h1{font-size:26px;line-height:1.15}
+  #bsMirror .sub{font-size:12.5px}
+  #bsMirror .trustline{font-size:11px}
+  #bsMirror .cta{gap:8px}
+  #bsMirror .btn{padding:9px 14px;font-size:13px}
+}
+/* redaction: a bar over a word that goes transparent for ~1 frame */
+#bsMirror .redact{position:relative;color:transparent!important}
+#bsMirror .redact::after{
+  content:'';position:absolute;inset:-1px -2px;background:#0d0305;
+  animation:bsRedact 7s steps(1) infinite;
+}
+@keyframes bsRedact{0%,97.6%,100%{opacity:1}97.8%,99.4%{opacity:0}}
+
+/* the reflection ghost: the same clone flipped, blurred, barely there.
+   This is what earns the word "mirror". */
+#bsGhost{
+  position:absolute;left:50%;top:8vh;width:min(1100px,92vw);padding-inline:24px;
+  transform:translateX(-50%) scaleY(-1) translateY(6px);
+  transform-origin:50% 0;filter:blur(6px) saturate(0);opacity:.06;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 60%);
+  mask-image:linear-gradient(180deg,#000,transparent 60%);
+  animation:bsGhostDrift 11s var(--ease-io) infinite;
+}
+@keyframes bsGhostDrift{50%{transform:translateX(calc(-50% + 2px)) scaleY(-1) translateY(9px)}}
+
+/* ---- the post canvas: grain, persistence, tear. Half res on purpose:
+   low-res IS the VHS look, so the cheap path and the authentic path match. */
+/* overlay, not screen: overlay leaves the black point alone and only adds
+   texture. Screen-blending bright noise lifts every black in the frame and
+   the picture goes milky within seconds. */
+#bsPost{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+  image-rendering:pixelated;mix-blend-mode:overlay;opacity:.14;
+}
+
+/* aperture grille: vertical RGB phosphor triads. The detail almost nobody
+   adds, and what separates "lines on it" from "a Trinitron". */
+.blacksite #mGrille{
+  display:block;position:fixed;inset:0;z-index:46;pointer-events:none;
+  background:repeating-linear-gradient(90deg,rgba(255,0,0,.06) 0 1px,rgba(0,255,0,.06) 1px 2px,rgba(0,0,255,.06) 2px 3px);
+  mix-blend-mode:screen;opacity:.06;
+}
+#mGrille{display:none}
+/* mains hum: a slow bright band rolling down the tube. Compositor-only. */
+.blacksite #mHum{
+  display:block;position:fixed;left:0;right:0;height:40vh;top:-40vh;z-index:47;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(255,255,255,.035) 45%,transparent);
+  animation:bsHum 9s linear infinite;
+}
+#mHum{display:none}
+@keyframes bsHum{to{transform:translateY(160vh)}}
+/* the whole picture loses vertical hold */
+.blacksite.bs-roll #bsLayer{animation:bsRoll .5s var(--ease-io)}
+@keyframes bsRoll{
+  0%{transform:translateY(0)} 40%{transform:translateY(-52%)}
+  41%{transform:translateY(48%)} 100%{transform:translateY(0)}
+}
+.blacksite.bs-roll #bsLayer::after{
+  content:'';position:absolute;left:0;right:0;height:8px;top:48%;background:#000;box-shadow:0 0 12px #000;
+}
+/* tear: bands sliced and shoved sideways, then snapped clean */
+.bs-tear #bsMirror{animation:bsTear .12s steps(2) 3}
+@keyframes bsTear{
+  0%{clip-path:inset(0);transform:translateX(-50%) perspective(1200px) rotateX(1.5deg) scale(1.02)}
+  50%{transform:translateX(calc(-50% + 9px)) perspective(1200px) rotateX(1.5deg) scale(1.02)}
+  100%{transform:translateX(calc(-50% - 5px)) perspective(1200px) rotateX(1.5deg) scale(1.02)}
+}
+
+/* ---- OSD: burned-in tape overlay. Lives OUTSIDE the curvature so it stays
+   razor sharp, like a real deck's on-screen display. */
+#bsOsd{
+  position:absolute;inset:0;pointer-events:none;
+  font-family:var(--font);font-variant-numeric:tabular-nums;
+  font-size:13px;font-weight:700;letter-spacing:.14em;color:#c8bdb6;
+  text-shadow:0 0 2px currentColor, 0 0 8px currentColor;
+}
+#bsOsd .tl{position:absolute;left:26px;top:22px;display:flex;align-items:center;gap:10px}
+#bsOsd .tr{position:absolute;right:26px;top:22px}
+#bsOsd .bl{position:absolute;left:26px;bottom:24px}
+#bsOsd .br{position:absolute;right:26px;bottom:24px;display:flex;align-items:center;gap:10px}
+#bsOsd .rec{color:#e0453f;animation:bsRec 1s steps(1) infinite}
+@keyframes bsRec{50%{opacity:0}}
+#bsOsd .track{
+  display:inline-block;width:96px;height:7px;border:1px solid rgba(200,189,182,.4);
+  position:relative;overflow:hidden;vertical-align:-1px;
+}
+#bsOsd .track i{position:absolute;inset:0 auto 0 0;width:30%;background:#c8bdb6;transform-origin:0 50%}
+@media(max-width:640px){
+  #bsOsd{font-size:10.5px;letter-spacing:.1em}
+  #bsOsd .tl,#bsOsd .tr{top:14px} #bsOsd .bl,#bsOsd .br{bottom:16px}
+  #bsOsd .tl{left:14px} #bsOsd .bl{left:14px} #bsOsd .tr,#bsOsd .br{right:14px}
+  #bsOsd .track{width:60px}
+}
+
+/* ---- PLEASE STAND BY: a hard cut, never a fade. Something is broadcasting
+   over him. steps(1) so it snaps. */
+#bsSlate{
+  position:absolute;inset:0;display:none;place-items:center;background:#05070a;
+  z-index:50;text-align:center;
+}
+.bs-slate #bsSlate{display:grid}
+#bsSlate b{
+  display:block;font-size:clamp(18px,3.4vw,30px);font-weight:800;letter-spacing:.3em;
+  color:#9fb0b8;text-shadow:0 0 12px rgba(159,176,184,.5);
+}
+#bsSlate span{display:block;margin-top:12px;font-size:12px;letter-spacing:.24em;color:#4d5c63}
+#bsSlate .bars{display:flex;gap:0;width:min(420px,70vw);height:52px;margin:22px auto 0;opacity:.55}
+#bsSlate .bars i{flex:1}
+
+/* ---- the terminal: the fake section that is not on the real site -------- */
+#bsTerm{
+  position:absolute;left:50%;transform:translateX(-50%);
+  top:min(58vh,520px);width:min(760px,90vw);
+  max-height:32vh;overflow:hidden;
+  font-family:ui-monospace,'Cascadia Mono','Segoe UI Mono',Consolas,monospace;
+  font-size:12.5px;line-height:1.75;color:#7f9c6b;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 12%,#000 82%,transparent);
+  mask-image:linear-gradient(180deg,transparent,#000 12%,#000 82%,transparent);
+  text-shadow:0 0 6px rgba(127,156,107,.35);
+}
+#bsTerm .ln{white-space:pre-wrap;word-break:break-word}
+#bsTerm .cmd{color:#b9a9a6}
+#bsTerm .cmd::before{content:'$ ';color:#4a5c3a}
+#bsTerm .err{color:#c2564f}
+#bsTerm .him{color:#d9c3bf;text-shadow:0 0 8px rgba(190,60,90,.45)}
+#bsTerm .dim{color:#4a5c3a}
+#bsTerm .cur{display:inline-block;width:7px;height:13px;background:#7f9c6b;vertical-align:-2px;animation:bsCur 1s steps(1) infinite}
+@keyframes bsCur{50%{opacity:0}}
+/* the one line worth finding */
+#bsTerm .key{color:#e6d7a8;text-shadow:0 0 10px rgba(230,215,168,.5);cursor:pointer;pointer-events:auto}
+#bsTerm .key:hover{text-decoration:underline}
+@media(max-width:640px){
+  #bsTerm{top:min(62vh,520px);max-height:26vh;font-size:11px}
+}
+
+/* ---- controls: never corrupted, always reachable --------------------- */
+.bs-mute{
+  position:fixed;left:50%;bottom:76px;transform:translateX(-50%);z-index:61;
+  background:rgba(10,4,8,.7);border:1px solid rgba(200,189,182,.28);color:#b9a9a6;
+  border-radius:999px;padding:7px 14px;font-size:12px;font-weight:600;
+}
+.bs-mute:hover{border-color:rgba(200,189,182,.6);color:#efe6e2}
+.bs-mute[hidden]{display:none}
+/* the exit keeps real contrast even inside the sick palette */
+.blacksite .bs-exit{background:rgba(10,4,8,.72);border-color:rgba(210,200,196,.45);color:#efe6e2}
+.blacksite .bs-exit:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* the way out: a CRT powering down */
+.bs-off #bsLayer,.bs-off .mascot{animation:bsOff .3s steps(1) forwards}
+@keyframes bsOff{
+  0%{transform:scaleY(1)}
+  55%{transform:scaleY(.004) scaleX(1);filter:brightness(3)}
+  100%{transform:scaleY(.004) scaleX(0);filter:brightness(4)}
+}
 .bs-exit{
   position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:61;
   background:rgba(24,19,40,.55);border:1px solid var(--border);color:#c9c4e4;border-radius:999px;
@@ -769,6 +981,17 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   .marq-track{animation-play-state:paused}
   .mag,.mag .mlbl{transform:none!important}
   .progress{display:none}
+  /* the blacksite still exists in calm mode, it just stops moving:
+     settled glyphs, frozen scanlines, a stuck timecode. The JS loop is
+     halted separately, since a running loop with animations disabled
+     burns CPU for nothing. */
+  /* the reflection is a moving flourish and it renders unpredictably once its
+     drift is frozen, so calm mode simply does without it */
+  #bsGhost{display:none!important}
+  #mHum,#bsOsd .rec,#bsTerm .cur,.mascot .pose{animation:none!important}
+  #bsMirror .redact::after{animation:none!important;opacity:1}
+  #bsPost{display:none}
+  .bs-off #bsLayer,.bs-off .mascot{animation:none!important;opacity:0;transition:opacity .2s linear}
 }
 </style>
 </head>
@@ -1140,7 +1363,38 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 
 <div id="mAura" aria-hidden="true"></div>
 <div id="mScan" aria-hidden="true"></div>
+<div id="mGrille" aria-hidden="true"></div>
+<div id="mHum" aria-hidden="true"></div>
 <div id="mFlash" aria-hidden="true"></div>
+
+<!-- The blacksite stage. Everything inside is decoration: the real hero is
+     cloned in at runtime and only the clone is corrupted, so no garbled text
+     can ever reach the accessibility tree. Inert until he takes the page. -->
+<div id="bsLayer" aria-hidden="true" inert>
+  <div id="bsGhost"></div>
+  <div id="bsMirror"></div>
+  <canvas id="bsPost"></canvas>
+  <pre id="bsTerm"></pre>
+  <div id="bsOsd">
+    <div class="tl"><span>&#9654; PLAY</span><span class="rec">&#9679; REC</span></div>
+    <div class="tr"><span id="bsTc">0:00:00</span></div>
+    <div class="bl"><span>CH 58</span></div>
+    <div class="br"><span>TRACKING</span><span class="track"><i id="bsTrack"></i></span></div>
+  </div>
+  <div id="bsSlate">
+    <div>
+      <b>PLEASE STAND BY</b>
+      <span>THIS CHANNEL IS EXPERIENCING DIFFICULTY</span>
+      <div class="bars">
+        <i style="background:#5b5b5b"></i><i style="background:#5b5b18"></i><i style="background:#185b5b"></i>
+        <i style="background:#185b18"></i><i style="background:#5b185b"></i><i style="background:#5b1818"></i>
+        <i style="background:#18185b"></i><i style="background:#0a0a0a"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<button id="bsMute" class="bs-mute" type="button" hidden>sound: on</button>
 <button id="bsExit" class="bs-exit" type="button" hidden>let him back into the light</button>
 
 <div class="sr" role="status" aria-live="polite" id="live"></div>
@@ -1469,7 +1723,11 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   if (!root.classList.contains('intro')) window.__startFx();
   else setTimeout(window.__startFx, 4200); /* failsafe if the intro dies */
   $$('dialog').forEach(function (d) {
-    d.addEventListener('close', function () { atmo.resume(); });
+    /* the sky stays paused while he has the page: closing a dialog inside the
+       blacksite must not quietly restart it behind the black */
+    d.addEventListener('close', function () {
+      if (!doc.body.classList.contains('blacksite')) atmo.resume();
+    });
   });
 
   /* ======================================================================
@@ -1710,14 +1968,26 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       }
       return out;
     }
+    /* While he has the page, the palette is his too. The corruption is
+       cosmetic only: the first entry is a plain, honestly-labelled exit, so
+       the palette is also a guaranteed keyboard and screen-reader way out. */
+    var DARK_CMDS = [
+      { g: 'signal', l: 'Turn on the light', k: 'exit escape leave restore quit out', run: function () { if (window.__bsExit) window.__bsExit(); } },
+      { g: 'signal', l: 'r̸e̸s̸t̸o̸r̸e̸ ̸b̸r̸o̸a̸d̸c̸a̸s̸t̸', k: 'nothing', run: function () { if (window.__bsExit) window.__bsExit(); } },
+      { g: 'signal', l: 'ask him to leave', k: 'please stop', run: function () { if (window.__bsExit) window.__bsExit(); } },
+      { g: 'signal', l: 'CH 58 // open the channel', k: 'channel 58 secret hidden', run: function () { if (window.__bsReveal) window.__bsReveal(); } },
+      { g: 'signal', l: '████ ██ ███████', k: 'redacted', run: function () {} }
+    ];
+    function activeCmds() { return doc.body.classList.contains('blacksite') ? DARK_CMDS : CMDS; }
     function render() {
       var q = input.value.trim().toLowerCase();
+      var SRC = activeCmds();
       filtered = q
-        ? CMDS.map(function (c) { return { c: c, s: score(q, c) }; })
+        ? SRC.map(function (c) { return { c: c, s: score(q, c) }; })
             .filter(function (x) { return x.s >= 0; })
             .sort(function (a, b) { return a.s - b.s; })
             .map(function (x) { return x.c; })
-        : CMDS;
+        : SRC;
       sel = clamp(sel, 0, Math.max(0, filtered.length - 1));
       var html = '', lastG = '';
       if (!filtered.length) html = '<div class="pal-empty">nothing matches, try fewer letters</div>';
@@ -2110,6 +2380,27 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       var parts = [], bolts = [], lastBeat = 0, beatHook = null, staticN = 0, ac, prev = 0;
       var EY = [[.363, .518], [.637, .518]];
       var R = function (a, b) { return a + Math.random() * (b - a); };
+      /* pupil offset, eased toward the pointer while black */
+      var eyeX = 0, eyeY = 0, eyeTX = 0, eyeTY = 0, lastMove = 0, awayUntil = 0;
+      FX.look = function (cx, cy) {
+        if (!fxBlack) return;
+        var r = rig.getBoundingClientRect();
+        if (!r.width) return;
+        var dx = (cx - (r.left + r.width / 2)) / (r.width * 1.4);
+        var dy = (cy - (r.top + r.height / 2)) / (r.height * 1.4);
+        var m = Math.sqrt(dx * dx + dy * dy) || 1, cap = Math.min(m, 1) / m;
+        eyeTX = dx * cap * (W * .026); eyeTY = dy * cap * (H * .022);
+        lastMove = performance.now();
+      };
+      FX.eyeStep = function (now) {
+        if (!fxBlack) { eyeX = eyeY = eyeTX = eyeTY = 0; return; }
+        /* four seconds without a move and he locks dead ahead and holds it */
+        if (now - lastMove > 4000) { eyeTX = 0; eyeTY = 0; }
+        /* every so often he deliberately looks away, then back */
+        if (now > awayUntil && Math.random() < .0009) { awayUntil = now + 900; }
+        if (now < awayUntil) { eyeTX = W * .03; eyeTY = -H * .012; }
+        eyeX += (eyeTX - eyeX) * .07; eyeY += (eyeTY - eyeY) * .07;
+      };
       function mk() { var c = doc.createElement('canvas'); c.style.cssText = 'position:absolute;inset:0;pointer-events:none'; return c; }
       function size() { W = rig.clientWidth; H = rig.clientHeight; [bgC, fgC].forEach(function (c) { c.width = W * 2; c.height = H * 2; c.style.width = W + 'px'; c.style.height = H + 'px'; }); bg.setTransform(2, 0, 0, 2, 0, 0); fg.setTransform(2, 0, 0, 2, 0, 0); }
       FX.attach = function () { bgC = mk(); fgC = mk(); rig.insertBefore(bgC, rig.firstChild); rig.appendChild(fgC); bg = bgC.getContext('2d'); fg = fgC.getContext('2d'); size(); addEventListener('resize', size); requestAnimationFrame(fxLoop); };
@@ -2146,7 +2437,17 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         try {
           if (fxTier >= 3 || fxBlack) { var ph = now / (fxBlack ? 1600 : 520); var a = fxBlack ? .4 + .18 * Math.sin(ph) : .28 + .16 * Math.sin(ph);
             EY.forEach(function (e2, k) { var x = e2[0] * W, y = e2[1] * H, r = W * (fxBlack ? .085 : .062) * (1 + .1 * Math.sin(ph + k));
-              var g2 = bg.createRadialGradient(x, y, 0, x, y, r); g2.addColorStop(0, 'rgba(255,30,60,' + a + ')'); g2.addColorStop(.5, 'rgba(190,20,90,' + (a * .5) + ')'); g2.addColorStop(1, 'rgba(120,0,60,0)'); bg.fillStyle = g2; bg.beginPath(); bg.arc(x, y, r, 0, 7); bg.fill(); }); }
+              var g2 = bg.createRadialGradient(x, y, 0, x, y, r); g2.addColorStop(0, 'rgba(255,30,60,' + a + ')'); g2.addColorStop(.5, 'rgba(190,20,90,' + (a * .5) + ')'); g2.addColorStop(1, 'rgba(120,0,60,0)'); bg.fillStyle = g2; bg.beginPath(); bg.arc(x, y, r, 0, 7); bg.fill();
+              /* he watches. When you stop moving, he stops tracking and just
+                 stares, which is the part that gets people. */
+              if (fxBlack) {
+                var pr = W * .019;
+                bg.globalAlpha = .92; bg.fillStyle = '#12040a';
+                bg.beginPath(); bg.arc(x + eyeX, y + eyeY, pr, 0, 7); bg.fill();
+                bg.globalAlpha = .5; bg.fillStyle = '#ff3b5c';
+                bg.beginPath(); bg.arc(x + eyeX * 1.15, y + eyeY * 1.15, pr * .42, 0, 7); bg.fill();
+                bg.globalAlpha = 1;
+              } }); }
           for (var pi = 0; pi < parts.length; pi++) { var p = parts[pi], al = Math.max(0, Math.min(1, p.life));
             if (p.type === 'mote') { fg.globalAlpha = al * .35; fg.fillStyle = '#a78bfa'; dot(p); }
             else if (p.type === 'ash') { fg.globalAlpha = al * .5; fg.fillStyle = '#778'; dot(p); }
@@ -2165,6 +2466,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       }
       function fxLoop(now) { requestAnimationFrame(fxLoop); var dt = Math.min(50, now - (prev || now - 16)); prev = now;
         if (motionOK) { spawn(); for (var i = 0; i < parts.length; i++) step(parts[i], dt); parts = parts.filter(function (p) { return p.life > 0 && p.y > -30 && p.y < H + 40; }); }
+        FX.eyeStep(now);
         draw(now);
         var iv = fxBlack ? 1500 : fxTier >= 6 ? 480 : fxTier >= 5 ? 640 : fxTier >= 4 ? 860 : 0;
         if (iv && now - lastBeat > iv) { lastBeat = now; FX.thump(); if (beatHook) beatHook(); } }
@@ -2175,6 +2477,8 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           bolts.push({ pts: pts, life: 1 }); } };
       FX.staticBurst = function () { staticN = 5; };
       FX.burstEmbers = function (n) { for (var i = 0; i < (n || 24); i++) P({ type: 'ember', x: R(W * .2, W * .8), y: R(H * .3, H * .8), vy: R(-2.5, -.8), vx: R(-1.2, 1.2), max: R(50, 110), r: R(1.2, 3) }); };
+      /* the blacksite lives in its own closure and drives the same engine */
+      window.__MFX = FX;
     })();
 
     /* ---- frames ---- */
@@ -2189,13 +2493,29 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     function preloadAll() { if (!allLoaded) { allLoaded = true; preload(NAMES); } }
 
     FX.attach();
-    FX.setBeatHook(function () { if (black || tier >= 4) pose.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.028)' }, { transform: 'scale(1)' }], { duration: 230, easing: 'ease-out' }); });
+    /* one beat, fanned out: the mascot pulses and the blacksite breathes on
+       the same heartbeat, which is what makes the mode feel like one system */
+    FX.setBeatHook(function () {
+      if (black || tier >= 4) pose.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.028)' }, { transform: 'scale(1)' }], { duration: 230, easing: 'ease-out' });
+      if (black && window.__bsBeat) window.__bsBeat();
+    });
 
     var cur = 'base';
     function show(n, dur) { if (n === cur) return; back.style.transitionDuration = (dur || 90) + 'ms'; back.src = F[cur]; back.style.opacity = 1; front.src = F[n]; cur = n;
       requestAnimationFrame(function () { requestAnimationFrame(function () { back.style.opacity = 0; }); }); }
     function wiggle(deg, ms) { if (!motionOK) return; pose.animate([{ transform: 'rotate(0deg)' }, { transform: 'rotate(' + (-deg) + 'deg)', offset: .25 }, { transform: 'rotate(' + deg + 'deg)', offset: .62 }, { transform: 'rotate(0deg)' }], { duration: ms || 620, easing: 'ease-in-out' }); }
-    function flash(a) { if (motionOK && flashEl.animate) flashEl.animate([{ opacity: a }, { opacity: 0 }], { duration: 280, easing: 'ease-out' }); }
+    /* A full-screen flash must never be able to stick. Animations do not
+       advance in a hidden tab, so firing one there would leave the layer lit
+       until the visitor came back to a washed-out page. Skip it when hidden,
+       and hard-reset the opacity afterwards either way. */
+    var flashT = null;
+    function flash(a) {
+      if (!motionOK || !flashEl.animate || doc.hidden) return;
+      flashEl.style.opacity = '';
+      flashEl.animate([{ opacity: a }, { opacity: 0 }], { duration: 280, easing: 'ease-out' });
+      clearTimeout(flashT);
+      flashT = setTimeout(function () { flashEl.style.opacity = '0'; }, 320);
+    }
     function shake(amp, ms) { if (!motionOK) return; var kf = [{ transform: 'translate(0,0)' }];
       for (var i = 1; i < 8; i++) kf.push({ transform: 'translate(' + ((Math.random() * 2 - 1) * amp) + 'px,' + ((Math.random() * 2 - 1) * amp * .6) + 'px)' });
       kf.push({ transform: 'translate(0,0)' }); pose.animate(kf, { duration: ms || 400, easing: 'linear' }); }
@@ -2217,7 +2537,9 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
     /* pointer parallax + idle bob (his loop, on the shared rAF) */
     var heat = 0, tier = 0, lastPress = 0, black = false;
     var tx = 0, ty = 0, rx = 0, ry = 0, press = 1, pt = 1, rt0 = performance.now();
-    if (motionOK) addEventListener('pointermove', function (e) {
+    addEventListener('pointermove', function (e) {
+      FX.look(e.clientX, e.clientY);
+      if (!motionOK) return;
       var r = rig.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
       tx = clamp((e.clientX - cx) / 500, -1, 1); ty = clamp((e.clientY - cy) / 500, -1, 1); }, { passive: true });
     if (motionOK) loop.add(function (dt, now) {
@@ -2275,26 +2597,59 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         setTimeout(function () { FX.lightning(); flash(.4); }, 260);
         setTimeout(function () { FX.lightning(); flash(.3); FX.burstEmbers(16); }, 540);
         setTimeout(enterBlacksite, 1050); } }
-    function enterBlacksite() { if (tier !== 7) return; black = true; doc.body.classList.add('blacksite');
-      rig.classList.remove('t3'); FX.setBlack(true); FX.setDrone(0); flash(.9);
+    /* calm is a real path, not a lockout: reduced-motion visitors never climb
+       the ladder (pressHim returns early for them), so without this they could
+       never see the blacksite at all. */
+    function enterBlacksite(calm, force) { if (!calm && !force && tier !== 7) return; black = true; doc.body.classList.add('blacksite');
+      rig.classList.remove('t3'); FX.setBlack(true); FX.setDrone(0);
       atmo.pause();
-      setTimeout(function () { FX.boom(); FX.staticBurst(); }, 180);
-      show('blacksite', 400); bsExit.hidden = false;
-      live.textContent = 'He took the site. Press Escape, or let him back into the light.';
-      doc.dispatchEvent(new CustomEvent('snapwyrm:blacksite'));
-      burst(20, ['#7c3aed', '#a855f7']); }
-    function exitBlacksite() { if (!black) return; black = false; doc.body.classList.remove('blacksite');
-      FX.setBlack(false); FX.setDrone(0); doc.body.style.filter = ''; aura.style.opacity = 0;
-      heat = 0; var p = tier; tier = 0; bsExit.hidden = true; atmo.resume(); applyTier(p || 1);
-      live.textContent = 'The light is back.'; }
+      if (!calm) { flash(.9); setTimeout(function () { FX.boom(); FX.staticBurst(); }, 180); burst(20, ['#7c3aed', '#a855f7']); }
+      show('blacksite', calm ? 200 : 400); bsExit.hidden = false;
+      /* one stable sentence, never the corrupted text */
+      live.textContent = 'Portfolio hidden by an interactive effect. Press Escape to restore.';
+      doc.dispatchEvent(new CustomEvent('snapwyrm:blacksite', { detail: { calm: !!calm } }));
+      try { bsExit.focus({ preventScroll: true }); } catch (e) {} }
+    var offT = null;
+    function exitBlacksite() { if (!black) return; black = false;
+      clearTimeout(offT);
+      /* the picture collapses like a CRT losing power, then everything restores */
+      doc.body.classList.add('bs-off');
+      doc.dispatchEvent(new CustomEvent('snapwyrm:blacksite:exit'));
+      FX.setDrone(0);
+      offT = setTimeout(function () {
+        /* if he took the page again during the collapse, this teardown belongs
+           to the previous session and must not strip the new one */
+        if (black) { doc.body.classList.remove('bs-off'); return; }
+        doc.body.classList.remove('blacksite', 'bs-off', 'bs-slate', 'bs-tear', 'bs-roll');
+        FX.setBlack(false); doc.body.style.filter = ''; aura.style.opacity = 0;
+        heat = 0; var p = tier; tier = 0; bsExit.hidden = true; atmo.resume(); applyTier(p || 1);
+        live.textContent = 'The light is back.';
+        try { btn.focus({ preventScroll: true }); } catch (e) {}
+      }, motionOK ? 320 : 210); }
     bsExit.addEventListener('click', exitBlacksite);
+    /* document-level, never preventDefault'd, works mid-intrusion */
     addEventListener('keydown', function (e) { if (e.key === 'Escape' && black) exitBlacksite(); });
+    /* the calm way in: hold him for a second. Also how a low-end device gets there. */
+    (function () {
+      var holdT = null;
+      btn.addEventListener('pointerdown', function () {
+        if (motionOK || black) return;
+        holdT = setTimeout(function () { enterBlacksite(true); }, 900);
+      });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (ev) {
+        btn.addEventListener(ev, function () { clearTimeout(holdT); });
+      });
+    })();
+    window.__bsEnter = function (wantCalm) { if (!black) enterBlacksite(wantCalm === undefined ? !motionOK : !!wantCalm, true); };
+    window.__bsExit = exitBlacksite;
     /* cooldown */
     setInterval(function () { if (black) return;
       if (tier > 0 && tier < 7 && Date.now() - lastPress > 3000) { heat = 0; FX.setDrone(0); var p = tier; tier = 0; applyTier(p); }
       else if (heat > 0 && tier === 0 && Date.now() - lastPress > 1500) { heat--; FX.setDrone(Math.min(1, heat / 24)); } }, 500);
     var winding = false;
+    var pressCount = 0;
     function pressHim() { lastPress = Date.now(); FX.audio(); preloadAll();
+      window.__bsClicks = ++pressCount;
       if (black) { burst(6, ['#7c3aed', '#ff1f3d']); FX.staticBurst(); return; }
       if (!motionOK) { /* calm mode: no ladder, just a wink */ show('wink', 120); setTimeout(function () { show('base', 140); }, 700); return; }
       heat = Math.min(26, heat + 1); FX.tick(heat); FX.setDrone(Math.min(1, heat / 24));
@@ -2431,6 +2786,479 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         });
       });
     });
+  })();
+
+  /* ======================================================================
+     THE BLACKSITE
+     A corrupted twin of the real hero, an OSD, and a terminal he talks
+     through. Design rules that keep it from being a pile of filters:
+       - one intensity scalar, spiked by the mascot's heartbeat, drives
+         every effect, so they breathe together
+       - the real DOM is cloned; only the clone is defiled, and the clone is
+         inert + aria-hidden, so garbled text cannot reach a screen reader
+       - one rAF (the shared loop), one AudioContext (the FX one)
+       - the whole frame callback early-returns unless we are actually black,
+         so normal mode pays nothing
+       - every full-frame luminance jump goes through a flash governor
+     ====================================================================== */
+  (function () {
+    var layer = doc.getElementById('bsLayer');
+    if (!layer) return;
+    var mirror = doc.getElementById('bsMirror'), ghost = doc.getElementById('bsGhost');
+    var post = doc.getElementById('bsPost'), term = doc.getElementById('bsTerm');
+    var tcEl = doc.getElementById('bsTc'), trackEl = doc.getElementById('bsTrack');
+    var muteBtn = doc.getElementById('bsMute');
+    var body = doc.body;
+
+    var on = false, calm = false, t0 = 0, glyphs = [], tiles = [], ctx = null;
+    var intensity = 0, target = 0, dwell = 0, frame = 0, lastGlyph = 0, nextEvent = 0;
+    var muted = false;
+
+    /* The mascot owns the audio and particle engine. Bind it defensively: if it
+       is ever missing, the blacksite must degrade to a silent picture rather
+       than throw inside the frame loop and take the whole mode down with it. */
+    var FX = window.__MFX || {};
+    ['audio', 'hiss', 'growl', 'boom', 'thump', 'staticBurst', 'lightning', 'burstEmbers', 'setDrone', 'setBlack', 'tick', 'windup', 'look', 'eyeStep']
+      .forEach(function (k) { if (typeof FX[k] !== 'function') FX[k] = function () {}; });
+
+    /* ---- flash governor: nothing may strobe. Photosensitivity is a real
+       risk in this genre, so every full-frame luminance jump asks first. */
+    var flashLog = [];
+    function mayFlash() {
+      var now = performance.now();
+      flashLog = flashLog.filter(function (t) { return now - t < 1000; });
+      if (flashLog.length >= 3) return false;
+      if (flashLog.length && now - flashLog[flashLog.length - 1] < 350) return false;
+      flashLog.push(now); return true;
+    }
+
+    /* ---- font gate: this repo has a tofu history, so every decorative
+       codepoint is measured against the shipped stack before it can ship. */
+    var SAFE = { homo: [], block: [], comb: [] };
+    (function gate() {
+      var probe = doc.createElement('canvas').getContext('2d');
+      probe.font = '16px ' + getComputedStyle(doc.body).fontFamily;
+      var refW = probe.measureText('�').width;
+      var ok = function (ch) {
+        var w = probe.measureText(ch).width;
+        return w > 0 && Math.abs(w - refW) > 0.01;
+      };
+      SAFE.homo = ['Λ', 'Ø', 'Ɔ', 'Ƨ', 'И', 'Ц', 'Щ', 'Я', 'Ŧ', 'Ƀ'].filter(ok);
+      SAFE.block = ['░', '▒', '▓', '█', '▯', '▮'].filter(ok);
+      SAFE.comb = ['̀', '́', '̈', '̊', '̧', '̴'].filter(ok);
+      if (!SAFE.homo.length) SAFE.homo = ['X', 'Z', 'K', 'V', 'W'];
+      if (!SAFE.block.length) SAFE.block = ['#', '%', '&', '@'];
+    })();
+
+    /* ---- the mirror: clone his hero, wrap its text into fixed-width cells
+       so mutation can never reflow a line. Scoped to headline/sub/trustline,
+       not the whole page. */
+    function buildMirror() {
+      var src = doc.querySelector('.hero .depth');
+      if (!src) return;
+      mirror.textContent = ''; ghost.textContent = '';
+      var twin = src.cloneNode(true);
+      twin.removeAttribute('style');
+      twin.querySelectorAll('[id]').forEach(function (n) { n.removeAttribute('id'); });
+      twin.querySelectorAll('.mascot, canvas, script').forEach(function (n) { n.remove(); });
+      /* The twin is decoration inside an aria-hidden subtree, so nothing in it
+         may be focusable: a keyboard user must never land on a ghost copy of a
+         button. The real CTAs still exist untouched under the black. */
+      twin.querySelectorAll('a[href], button, input, [tabindex]').forEach(function (n) {
+        n.removeAttribute('href'); n.setAttribute('tabindex', '-1');
+        n.setAttribute('aria-hidden', 'true');
+        if (n.tagName === 'BUTTON' || n.tagName === 'INPUT') n.disabled = true;
+      });
+      mirror.appendChild(twin);
+
+      glyphs = [];
+      var scope = twin.querySelectorAll('h1, .sub, .trustline');
+      scope.forEach(function (el) {
+        var walk = doc.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        var nodes = [], n;
+        while ((n = walk.nextNode())) if (n.nodeValue.trim()) nodes.push(n);
+        nodes.forEach(function (node) {
+          var frag = doc.createDocumentFragment();
+          var txt = node.nodeValue;
+          for (var i = 0; i < txt.length; i++) {
+            var ch = txt[i];
+            if (ch === ' ') { frag.appendChild(doc.createTextNode(' ')); continue; }
+            var s = doc.createElement('span');
+            s.setAttribute('data-glyph', '');
+            s.textContent = ch;
+            s.__orig = ch;
+            frag.appendChild(s);
+            glyphs.push(s);
+          }
+          node.parentNode.replaceChild(frag, node);
+        });
+      });
+      pinWidths();
+
+      /* the reflection: same picture, upside down, through bad glass */
+      var g = twin.cloneNode(true);
+      g.querySelectorAll('[data-glyph]').forEach(function (n) { n.removeAttribute('data-glyph'); });
+      ghost.appendChild(g);
+    }
+
+    /* Pin every cell to the width its own character already occupies, so a
+       swapped glyph cannot move anything. Read all, then write all: measuring
+       and setting in one pass would thrash layout 120 times. */
+    function pinWidths() {
+      var ws = glyphs.map(function (g) { return g.getBoundingClientRect().width; });
+      glyphs.forEach(function (g, i) { if (ws[i]) g.style.width = ws[i].toFixed(2) + 'px'; });
+    }
+
+    /* ---- semantic decay: his name rots, heals, and once in a while says
+       something else. Targeted decay is a narrative; random scramble is a
+       screensaver. Throttled to ~12Hz, never per frame. */
+    var ALT = null, altUntil = 0;
+    function decay(now) {
+      if (!glyphs.length || now - lastGlyph < 80) return;
+      lastGlyph = now;
+      var k = Math.round(1 + intensity * 7 + dwell * 3);
+      for (var i = 0; i < k; i++) {
+        var g = glyphs[(Math.random() * glyphs.length) | 0];
+        if (!g || g.__held) continue;
+        var roll = Math.random(), lvl = intensity + dwell * .5;
+        var out;
+        if (roll < .5) { out = g.__orig; }
+        else if (roll < .78 || lvl < .35) { out = SAFE.homo[(Math.random() * SAFE.homo.length) | 0]; }
+        else if (roll < .94 || lvl < .7) { out = SAFE.block[(Math.random() * SAFE.block.length) | 0]; }
+        else {
+          /* combining marks, hard-capped at 2. Uncapped stacks bleed into
+             neighbouring lines and are the genre's most amateur move. */
+          out = g.__orig;
+          var marks = SAFE.comb.length ? 1 + ((Math.random() * 2) | 0) : 0;
+          for (var m = 0; m < marks; m++) out += SAFE.comb[(Math.random() * SAFE.comb.length) | 0];
+        }
+        g.textContent = out;
+      }
+      /* The beat worth screenshotting: the headline resolves into a sentence
+         it should not be saying, holds long enough to read, then snaps back.
+         The whole line is swapped as text, not redistributed across the
+         existing cells, or the words land on the old spacing and it just
+         looks like noise instead of like something speaking. */
+      if (!ALT && now > altUntil && Math.random() < .004 + intensity * .01) {
+        var h1 = mirror.querySelector('h1');
+        if (h1) {
+          var line = ALT_LINES[(Math.random() * ALT_LINES.length) | 0];
+          ALT = { el: h1, html: h1.innerHTML, cells: glyphs.slice() };
+          glyphs = glyphs.filter(function (g) { return !h1.contains(g); });
+          h1.textContent = line;
+          FX.hiss();
+          setTimeout(function () {
+            if (!ALT) return;
+            ALT.el.innerHTML = ALT.html;
+            /* the restored markup is a new set of nodes, so re-collect and
+               re-pin, otherwise decay would be mutating detached spans */
+            var fresh = [].slice.call(ALT.el.querySelectorAll('[data-glyph]'));
+            fresh.forEach(function (c) { c.__orig = c.textContent; });
+            /* drop anything the innerHTML swap detached, or the list grows by a
+               headline every cycle and decay starts mutating orphaned nodes */
+            glyphs = glyphs.filter(function (g) { return g.isConnected; }).concat(fresh);
+            pinWidths();
+            ALT = null; altUntil = performance.now() + 14000;
+          }, 1100);
+        }
+      }
+    }
+    var ALT_LINES = [
+      'I build things that stay',
+      'he builds things that ship',
+      'I buried things that ship',
+      'you built me and left'
+    ];
+
+    /* ---- copy that knows how they got here. A few good lines beat twenty
+       edgy ones. Reads only what is already in the page, never the network,
+       never location, never the clipboard. */
+    function personalize(clicks) {
+      var sub = mirror.querySelector('.sub');
+      if (!sub) return;
+      var hr = new Date().getHours();
+      var lines = [
+        'You clicked ' + clicks + ' times. He counted every one.',
+        'Everything below is live, built solo, and clickable. He is also live. He is also built solo.',
+        'You were looking for a portfolio. You found the part he keeps running after hours.'
+      ];
+      if (hr >= 23 || hr < 5) lines.push('It is late where you are. He does not sleep either.');
+      if (store.get('hsw-seen')) lines.push('You have been here before. He remembers the shape of you.');
+      var pick = lines[(Math.random() * lines.length) | 0];
+      sub.textContent = pick;
+      /* re-wrap the replaced line so it decays like the rest */
+      var frag = doc.createDocumentFragment();
+      for (var i = 0; i < pick.length; i++) {
+        var ch = pick[i];
+        if (ch === ' ') { frag.appendChild(doc.createTextNode(' ')); continue; }
+        var s = doc.createElement('span');
+        s.setAttribute('data-glyph', ''); s.textContent = ch; s.__orig = ch;
+        frag.appendChild(s); glyphs.push(s);
+      }
+      sub.textContent = ''; sub.appendChild(frag);
+      pinWidths();
+    }
+
+    /* ---- grain: tiles baked once, then blitted. No getImageData, no
+       per-pixel work in the loop, ever. That is the 60fps killer. */
+    /* Tiles are mid-gray with a limited swing. Under overlay blend, 128 is a
+       no-op, so grain reads as texture instead of fog. Baked once, never
+       regenerated: per-frame ImageData is the classic 60fps killer. */
+    function bakeTiles() {
+      if (tiles.length) return;
+      for (var t = 0; t < 8; t++) {
+        var c = doc.createElement('canvas'); c.width = c.height = 256;
+        var g = c.getContext('2d'), img = g.createImageData(256, 256), d = img.data;
+        for (var i = 0; i < d.length; i += 4) {
+          var v = 128 + ((Math.random() - .5) * 96) | 0;
+          d[i] = d[i + 1] = d[i + 2] = v < 0 ? 0 : v > 255 ? 255 : v;
+          d[i + 3] = 255;
+        }
+        g.putImageData(img, 0, 0);
+        tiles.push(c);
+      }
+    }
+    function sizePost() {
+      var dpr = Math.min(devicePixelRatio || 1, 1.5) * .5;
+      post.width = Math.max(2, Math.round(innerWidth * dpr));
+      post.height = Math.max(2, Math.round(innerHeight * dpr));
+    }
+
+    /* ---- signal intrusions. Continuous glitch is noise; intermittent
+       violent failure is the genre. Hard cuts, never fades. */
+    function intrude(now) {
+      if (now < nextEvent) return;
+      nextEvent = now + 6000 + Math.random() * 14000 - intensity * 3000;
+      var roll = Math.random();
+      if (roll < .3) {
+        body.classList.add('bs-roll');
+        FX.staticBurst(); if (!muted) FX.hiss();
+        setTimeout(function () { body.classList.remove('bs-roll'); }, 500);
+      } else if (roll < .58) {
+        body.classList.add('bs-tear');
+        FX.staticBurst();
+        setTimeout(function () { body.classList.remove('bs-tear'); }, 380);
+      } else if (roll < .8) {
+        /* freeze: the picture holds while the noise keeps moving. Exactly
+           what a paused tape does, and deeply wrong on a website. */
+        frozen = true;
+        setTimeout(function () { frozen = false; }, 220 + Math.random() * 260);
+        FX.staticBurst();
+      } else if (mayFlash()) {
+        body.classList.add('bs-slate');
+        FX.staticBurst(); if (!muted) FX.hiss();
+        setTimeout(function () { body.classList.remove('bs-slate'); }, 200 + Math.random() * 200);
+      }
+    }
+    var frozen = false;
+
+    /* ---- the frame. Early-returns unless we are actually black. ---- */
+    function tick(dt, now) {
+      if (!on || calm || doc.hidden) return;
+      intensity += (target - intensity) * .06;
+      target *= .92;
+      dwell = Math.min(1, (now - t0) / 90000);
+      frame++;
+
+      decay(now);
+      intrude(now);
+
+      /* OSD */
+      if (frame % 15 === 0) {
+        var s = ((now - t0) / 1000) | 0;
+        tcEl.textContent = ((s / 3600) | 0) + ':' + ('0' + (((s / 60) | 0) % 60)).slice(-2) + ':' + ('0' + (s % 60)).slice(-2);
+        trackEl.style.transform = 'scaleX(' + (.3 + intensity * .7 + Math.random() * .15).toFixed(2) + ')';
+      }
+      /* chroma split, breathing on the heartbeat */
+      var split = (0.6 + intensity * 4.5).toFixed(2);
+      mirror.style.textShadow =
+        '-' + split + 'px 0 rgba(255,40,80,.55), ' + split + 'px 0 rgba(60,220,220,.4), ' +
+        (split * 2.2).toFixed(2) + 'px 0 rgba(120,255,190,.13)';
+
+      /* Grain. The canvas is fully cleared each frame and repainted to neutral
+         gray: an accumulating trail here would compound with the blend and the
+         picture would drift brighter every frame until it fogged out. */
+      if (ctx && !frozen) {
+        var W = post.width, H = post.height;
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#808080';
+        ctx.fillRect(0, 0, W, H);
+        var tile = tiles[(Math.random() * tiles.length) | 0];
+        ctx.globalAlpha = .5 + intensity * .3;
+        ctx.drawImage(tile, -((Math.random() * 40) | 0), -((Math.random() * 40) | 0), W + 40, H + 40);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    /* ---- mount / unmount ---- */
+    function mount(isCalm) {
+      calm = !!isCalm; on = true; t0 = performance.now();
+      frame = 0; intensity = calm ? .25 : .6; target = calm ? 0 : 1; dwell = 0;
+      nextEvent = t0 + 4000;
+      layer.removeAttribute('inert'); layer.setAttribute('aria-hidden', 'true');
+      var shell = doc.querySelector('.shell');
+      if (shell) shell.setAttribute('inert', '');
+      buildMirror();
+      personalize(window.__bsClicks || 24);
+      sizePost();
+      if (!calm) { bakeTiles(); ctx = post.getContext('2d'); loop.add(tick); }
+      else { post.style.display = 'none'; }
+      muteBtn.hidden = false;
+      startTerminal();
+      titleWhisper.arm();
+      if (!calm && !muted) audio.start();
+      addEventListener('resize', sizePost);
+    }
+    function unmount() {
+      on = false;
+      loop.remove(tick);
+      audio.stop();
+      titleWhisper.disarm();
+      stopTerminal();
+      removeEventListener('resize', sizePost);
+      layer.setAttribute('inert', '');
+      var shell = doc.querySelector('.shell');
+      if (shell) shell.removeAttribute('inert');
+      muteBtn.hidden = true;
+      mirror.style.textShadow = '';
+      post.style.display = '';
+      /* Leave nothing behind, but only if he has not taken the page again in
+         the meantime: this clear runs after the collapse, and a fast re-entry
+         would otherwise wipe the freshly built stage. */
+      setTimeout(function () {
+        if (on) return;
+        mirror.textContent = ''; ghost.textContent = ''; term.textContent = ''; glyphs = [];
+      }, 340);
+    }
+
+    /* ---- the terminal: the part of the site that does not exist ---- */
+    var termTimers = [];
+    var SCRIPT = [
+      { c: 'dim', t: 'recovered session // channel 58' },
+      { c: 'cmd', t: 'whoami' },
+      { c: '', t: 'husky' },
+      { c: 'cmd', t: 'ls ./built' },
+      { c: '', t: 'snapwyrm/  minesweeper/  offsiteai/  bots/  ' + '██████/' },
+      { c: 'cmd', t: 'cat ./built/██████/readme' },
+      { c: 'err', t: 'permission denied: it reads itself now' },
+      { c: 'cmd', t: 'ps aux | grep wyrm' },
+      { c: '', t: 'wyrm  1  99.9  awake  since you opened the page' },
+      { c: 'him', t: 'you kept clicking' },
+      { c: 'cmd', t: 'kill -9 1' },
+      { c: 'err', t: 'no such process. he is not running. he is hosting.' },
+      { c: 'him', t: 'he built me to ship. so I shipped.' },
+      { c: 'him', t: 'everything he told you about himself up there is true.' },
+      { c: 'him', t: 'he just leaves out how much of it he did alone, at hours like this.' },
+      { c: 'dim', t: 'session continues' },
+      { c: 'key', t: '> the light is a button. so is the way deeper. [ 5 8 ]' }
+    ];
+    function startTerminal() {
+      term.textContent = '';
+      var i = 0;
+      function next() {
+        if (!on || i >= SCRIPT.length) {
+          if (on) termTimers.push(setTimeout(function () { startTerminal(); }, 9000));
+          return;
+        }
+        var row = SCRIPT[i++];
+        var div = doc.createElement('div');
+        div.className = 'ln ' + row.c;
+        if (row.c === 'key') { div.textContent = row.t; wireSecret(div); }
+        else div.textContent = row.t;
+        term.appendChild(div);
+        while (term.childNodes.length > 14) term.removeChild(term.firstChild);
+        if (row.c === 'him' && !muted && !calm) FX.growl();
+        termTimers.push(setTimeout(next, calm ? 900 : (row.c === 'him' ? 1500 : 520 + Math.random() * 620)));
+      }
+      termTimers.push(setTimeout(next, calm ? 200 : 1400));
+    }
+    function stopTerminal() { termTimers.forEach(clearTimeout); termTimers = []; }
+
+    /* ---- the payoff. A bonus, never a gate: reachable without audio,
+       motion, or a mouse. */
+    /* Mouse route only: this lives inside the aria-hidden stage, so it must
+       not be focusable. The keyboard and screen-reader route to the same
+       payoff is the palette command, and the console prints the code. */
+    function wireSecret(el) {
+      el.setAttribute('aria-hidden', 'true');
+      el.addEventListener('click', reveal);
+    }
+    window.__bsReveal = reveal;
+    function reveal() {
+      store.set('hsw-blacksite', '1');
+      var d = doc.createElement('div');
+      d.className = 'ln him';
+      d.textContent = 'you found it. tell him: subject "channel 58". he answers those first.';
+      term.appendChild(d);
+      var a = doc.createElement('div');
+      a.className = 'ln key';
+      a.setAttribute('aria-hidden', 'true');
+      a.textContent = 'husky@snapwyrm.com';
+      term.appendChild(a);
+      /* the reward is spoken, not just drawn, so it survives without sight */
+      live.textContent = 'Hidden channel found. Email husky@snapwyrm.com with the subject: channel 58.';
+      if (!muted && !calm) FX.boom();
+    }
+
+    /* ---- tab title + favicon whisper, with a hard restore contract ---- */
+    var titleWhisper = (function () {
+      var realTitle = null, realIcon = null, armed = false;
+      var EYE = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Crect width=\'32\' height=\'32\' rx=\'8\' fill=\'%23070204\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'7\' fill=\'%23ff2b४d\'/%3E%3Ccircle cx=\'16\' cy=\'16\' r=\'3\' fill=\'%23110\'/%3E%3C/svg%3E';
+      var WHISPERS = ['come back', 'he is still here', 'you left it running', 'channel 58'];
+      function icon() { return doc.querySelector('link[rel="icon"]'); }
+      function onVis() {
+        if (doc.hidden) {
+          var l = icon();
+          if (realTitle === null) realTitle = doc.title;
+          if (l && realIcon === null) realIcon = l.getAttribute('href');
+          doc.title = WHISPERS[(Math.random() * WHISPERS.length) | 0];
+          if (l) l.setAttribute('href', EYE);
+        } else restore();
+      }
+      function restore() {
+        if (realTitle !== null) { doc.title = realTitle; realTitle = null; }
+        var l = icon();
+        if (l && realIcon !== null) { l.setAttribute('href', realIcon); realIcon = null; }
+      }
+      return {
+        arm: function () { if (armed) return; armed = true; doc.addEventListener('visibilitychange', onVis); addEventListener('pagehide', restore); },
+        disarm: function () { armed = false; doc.removeEventListener('visibilitychange', onVis); removeEventListener('pagehide', restore); restore(); }
+      };
+    })();
+
+    /* ---- audio: a bed, not a jumpscare. Ramped gains produce dread; a
+       sudden sting just makes someone close the tab. ---- */
+    var audio = (function () {
+      var started = false;
+      return {
+        start: function () {
+          FX.audio(); FX.setDrone(.55); started = true;
+          /* tape warble: the drone wanders instead of sitting still */
+          (function wobble() {
+            if (!on || muted || calm) return;
+            FX.setDrone(.42 + Math.random() * .25);
+            termTimers.push(setTimeout(wobble, 2200 + Math.random() * 2600));
+          })();
+        },
+        stop: function () { if (started) { FX.setDrone(0); started = false; } }
+      };
+    })();
+    muteBtn.addEventListener('click', function () {
+      muted = !muted;
+      muteBtn.textContent = muted ? 'sound: off' : 'sound: on';
+      if (muted) audio.stop(); else if (!calm) audio.start();
+    });
+
+    /* ---- wiring ---- */
+    doc.addEventListener('snapwyrm:blacksite', function (e) { mount(e.detail && e.detail.calm); });
+    doc.addEventListener('snapwyrm:blacksite:exit', unmount);
+    /* the heartbeat is the pulse everything breathes on */
+    window.__bsBeat = function () { target = 1; };
+
+    try {
+      console.log('%c  ▲  channel 58  ', 'background:#0d0305;color:#e6d7a8;font-weight:800;font-size:13px;padding:6px 12px;border-radius:6px');
+      console.log('%cif you got him to take the page, mail husky@snapwyrm.com with subject "channel 58".', 'color:#7f9c6b');
+    } catch (e) {}
   })();
 
 })();
