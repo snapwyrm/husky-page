@@ -183,6 +183,10 @@
      type on the page (17px), so four consecutive sections had no landing
      point for the eye. */
   --font-display:'Bricolage','Bricolage Fallback',system-ui,-apple-system,'Segoe UI',sans-serif;
+  /* the design pass references var(--display) in six places; without this
+     alias those rules fell back to the system stack and the page's biggest
+     numbers (prices, the receipt total, the thesis) silently lost the face */
+  --display:var(--font-display);
   --font:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
   --font-mono:ui-monospace,'SF Mono','Cascadia Mono','Segoe UI Mono','Roboto Mono',monospace;
   --fs-2xs:11.5px;
@@ -1454,7 +1458,11 @@ body.blacksite{background:#000}
 .road-intro{max-width:54ch;color:var(--lead);font-size:16px;line-height:1.66}
 .road-intro strong{color:var(--text-hi);font-weight:600}
 .ar-road{position:relative;margin-top:46px;padding:8px 0 0}
-.spine{position:absolute;left:50%;top:0;bottom:96px;width:2px;translate:-1px 0;background:linear-gradient(180deg,transparent,rgba(167,139,250,.45) 8%,rgba(34,211,238,.4) 70%,rgba(52,211,153,.35));
+/* bottom is a fallback only: the About JS measures the destination block and
+   overwrites it, because the block's height depends on wrapping and a fixed
+   value at any width puts the line through the destination text. The tail
+   fades so the measured end reads as an arrival, not a cut. */
+.spine{position:absolute;left:50%;top:0;bottom:96px;width:2px;translate:-1px 0;background:linear-gradient(180deg,transparent,rgba(167,139,250,.45) 8%,rgba(34,211,238,.4) 70%,rgba(52,211,153,.35) 88%,transparent);
   transform-origin:top;scale:1 0;transition:scale 1.5s var(--ease-out)}
 .ar-road.go .spine{scale:1 1}
 .mile{position:relative;display:grid;grid-template-columns:1fr 58px 1fr;align-items:center;min-height:118px}
@@ -2145,6 +2153,11 @@ footer{position:relative;z-index:3;margin-top:var(--s7);padding:0;border-top:1px
   .b-acts{flex-direction:column;align-items:stretch;width:100%}
   .b-acts .btn{width:100%;justify-content:center}
   .b-state{justify-content:center}
+  /* the scene's bottom band carried desktop air on a phone: the chips row and
+     the baseline floated apart. Tighten the whole stack. */
+  .edge-console{bottom:56px;gap:8px}
+  .ec-log{max-height:min(132px,18vh)}
+  .edge-base{bottom:10px;row-gap:7px}
 }
 
 
@@ -6482,8 +6495,52 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   var road = document.getElementById('aboutRoad');
   if (!road) return;
   new IntersectionObserver(function (es) {
-    es.forEach(function (e) { if (e.isIntersecting) road.classList.add('go'); });
+    es.forEach(function (e) {
+      if (!e.isIntersecting) return;
+      road.classList.add('go');
+      /* refit on entry, and again after the draw transition has settled:
+         entry is the first moment the layout is guaranteed real for a
+         visitor, whatever happened during load */
+      fitSpine(); setTimeout(fitSpine, 300); setTimeout(fitSpine, 1700);
+    });
   }, { threshold: .12 }).observe(road);
+
+  /* The spine ends where the destination begins. Its CSS bottom was a fixed
+     96px, and the destination block (mascot, thesis, the hiring card) is far
+     taller than that at most widths, so the line ran straight through the
+     "self-taught / solo / still shipping" text. The destination's height
+     depends on wrapping, so the only honest end point is measured. */
+  var spine = road.querySelector('.spine'), dest = road.querySelector('.dest');
+  function fitSpine() {
+    if (!spine || !dest) return;
+    var img = dest.querySelector('img');
+    /* rect delta, not offsetTop: the destination's offsetParent is not the
+       road, so offsetTop measured against the wrong box and parked the line
+       hundreds of pixels short. Both rects ride any ancestor transform
+       together, so their difference is always the true in-road position. */
+    var top = dest.getBoundingClientRect().top - road.getBoundingClientRect().top;
+    /* land on the mascot's head: his art covers the line, and the road reads
+       as arriving at him rather than stopping short in empty space */
+    var end = top + (img ? img.offsetHeight * .4 : 0);
+    spine.style.bottom = Math.max(0, road.offsetHeight - end) + 'px';
+  }
+  fitSpine();
+  road.__fitSpine = fitSpine; /* reachable for tests and console debugging */
+  /* the road keeps growing after init: the webfont lands, the mascot image
+     decodes, milestone answers open and close. A one-shot measurement is
+     always stale against one of those, so watch the sizes and refit on every
+     change. Both boxes are observed because the road's outer height can stay
+     put while the destination moves inside it. */
+  if ('ResizeObserver' in window) {
+    var fsT = null;
+    var ro = new ResizeObserver(function () { clearTimeout(fsT); fsT = setTimeout(fitSpine, 60); });
+    ro.observe(road); if (dest) ro.observe(dest);
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitSpine);
+  addEventListener('load', function () { fitSpine(); });
+  var fsR = null;
+  addEventListener('resize', function () { clearTimeout(fsR); fsR = setTimeout(fitSpine, 150); });
+
   var miles = [].slice.call(road.querySelectorAll('.mile'));
   function toggle(m) {
     var on = m.getAttribute('aria-pressed') === 'true';
