@@ -25,7 +25,18 @@
   var d = document.documentElement;
   d.className = 'js';
   try {
-    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    /* the visitor's stored motion choice outranks the OS setting: on Windows
+       that media query is driven by the "animation effects" switch, which is
+       off on plenty of machines for reasons that are not accessibility. The
+       classes go on pre-paint so there is no flash of the wrong mode. */
+    var mo = null;
+    try { mo = localStorage.getItem('hsw-motion'); } catch (e3) {}
+    if (mo === 'on') d.classList.add('motion-force');
+    else if (mo === 'off') d.classList.add('motion-off');
+    var wantMotion = mo === 'on' ? true
+                   : mo === 'off' ? false
+                   : !matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (wantMotion) {
       /* fail-open FIRST: the timer must exist before anything that can throw,
          so no branch can strand the page behind a held state */
       window.__introGuard = setTimeout(function () {
@@ -2436,35 +2447,141 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
    reduced motion: one global kill + targeted removals; function stays
    ========================================================================== */
 @media (prefers-reduced-motion: reduce){
-  html{scroll-behavior:auto}
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
-  .grain{animation:none}
-  #fxgl,#fx2d{display:none!important}
-  .js.fx-on .stars-css{display:block}
-  /* neutralise the reveal on the property the reveal actually uses. v2 nuked
-     `transform` here, which also killed every hover lift and every magnetic
-     offset for reduced-motion users: a 3px hover response is feedback, not
-     motion sickness, and they should still get it. */
-  .js .reveal,.js.pre .hero h1 .li,.js.pre .hero .h-fade{opacity:1!important;translate:none!important}
-  .js.pre .hero h1 .li{transform:none!important}
-  .band::after{animation:none!important}
-  /* the roads arrive already drawn: the picture survives, the motion does not */
+html:not(.motion-force){scroll-behavior:auto}
+html:not(.motion-force) *,html:not(.motion-force) *::before,html:not(.motion-force) *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+html:not(.motion-force) .grain{animation:none}
+html:not(.motion-force) #fxgl,html:not(.motion-force) #fx2d{display:none!important}
+.js.fx-on:not(.motion-force) .stars-css{display:block}
+html:not(.motion-force) /* neutralise the reveal on the property the reveal actually uses. v2 nuked
+     `transform` here,html:not(.motion-force) which also killed every hover lift and every magnetic
+     offset for reduced-motion users: a 3px hover response is feedback,html:not(.motion-force) not
+     motion sickness,html:not(.motion-force) and they should still get it. */
+  .js .reveal,.js.pre:not(.motion-force) .hero h1 .li,.js.pre:not(.motion-force) .hero .h-fade{opacity:1!important;translate:none!important}
+.js.pre:not(.motion-force) .hero h1 .li{transform:none!important}
+html:not(.motion-force) .band::after{animation:none!important}
+html:not(.motion-force) /* the roads arrive already drawn: the picture survives,html:not(.motion-force) the motion does not */
   .roads .road{animation:none!important;scale:1 1!important}
-  .marq-track{animation-play-state:paused}
-  .mag,.mag .mlbl{transform:none!important}
-  .progress{display:none}
-  /* the blacksite still exists in calm mode, it just stops moving:
-     settled glyphs, frozen scanlines, a stuck timecode. The JS loop is
-     halted separately, since a running loop with animations disabled
+html:not(.motion-force) .marq-track{animation-play-state:paused}
+html:not(.motion-force) .mag,html:not(.motion-force) .mag .mlbl{transform:none!important}
+html:not(.motion-force) .progress{display:none}
+html:not(.motion-force) /* the blacksite still exists in calm mode,html:not(.motion-force) it just stops moving:
+     settled glyphs,html:not(.motion-force) frozen scanlines,html:not(.motion-force) a stuck timecode. The JS loop is
+     halted separately,html:not(.motion-force) since a running loop with animations disabled
      burns CPU for nothing. */
   /* the reflection is a moving flourish and it renders unpredictably once its
-     drift is frozen, so calm mode simply does without it */
+     drift is frozen,html:not(.motion-force) so calm mode simply does without it */
   #bsGhost{display:none!important}
-  #mHum,#bsOsd .rec,#bsTerm .cur,.mascot .pose{animation:none!important}
-  #bsMirror .redact::after{animation:none!important;opacity:1}
-  #bsPost{display:none}
-  .bs-off #bsLayer,.bs-off .mascot{animation:none!important;opacity:0;transition:opacity .2s linear}
+html:not(.motion-force) #mHum,html:not(.motion-force) #bsOsd .rec,html:not(.motion-force) #bsTerm .cur,html:not(.motion-force) .mascot .pose{animation:none!important}
+html:not(.motion-force) #bsMirror .redact::after{animation:none!important;opacity:1}
+html:not(.motion-force) #bsPost{display:none}
+html:not(.motion-force) .bs-off #bsLayer,html:not(.motion-force) .bs-off .mascot{animation:none!important;opacity:0;transition:opacity .2s linear}
 }
+
+/* ==========================================================================
+   the motion override
+
+   prefers-reduced-motion is respected by default, but on Windows it is set by
+   the OS "animation effects" switch, which is off on plenty of machines for
+   reasons that have nothing to do with vestibular comfort. So the setting is
+   a default here, not a verdict: html.motion-force (chosen by the visitor,
+   persisted) re-enables everything the reduce block and the no-preference
+   gates hold back, and html.motion-off is the same choice in the other
+   direction. Every rule below is generated from the gates above; edit the
+   gate, regenerate the mirror.
+   ========================================================================== */
+html.motion-force .brand-word{animation:brandShimmer 6s linear infinite}
+html.motion-force .brand:hover .brand-word{animation-duration:2.2s}
+html.motion-force .tag .dot{animation:pawStep 2.8s var(--ease-out) infinite}
+html.motion-force /* it steps rather than blinks: a paw should feel like a footfall */
+  .paw-dot{animation:pawStep 2.8s var(--ease-out) infinite!important}
+@keyframes pawStep{0%,100%{transform:none;opacity:1}42%{transform:translateY(-1.5px) rotate(-8deg);opacity:.78}70%{transform:none;opacity:1}}
+html.motion-force .grad{animation:brandShimmer 6s linear infinite}
+html.motion-force .hero h1:hover .grad{animation-duration:2.2s}
+html.motion-force .pf-hero b{animation:brandShimmer 7s linear infinite}
+@keyframes hmCellIn{from{opacity:0;transform:scale(.4)}to{opacity:1;transform:none}}
+html.motion-force .status::before{animation:pawStep 2.8s var(--ease-out) infinite}
+html.motion-force .f[aria-pressed="true"]{animation:brandShimmer 6s linear infinite}
+html.motion-force .loc b{animation:brandShimmer 7s linear infinite}
+html.motion-force .idx-filters .f[aria-pressed="true"]{animation:brandShimmer 6s linear infinite}
+html.motion-force .roadask .mile[aria-pressed="true"] .node{animation:brandShimmer 6s linear infinite}
+html.motion-force .roadask .dest-card .rows b{animation:brandShimmer 6s linear infinite}
+html.motion-force .shim{animation:brandShimmer 6s linear infinite}
+html.motion-force .filters .f[aria-pressed="true"]{animation:brandShimmer 6s linear infinite}
+html.motion-force .filters .f{animation:fChipIn .42s var(--ease-out) both;animation-delay:calc(var(--i,0)*55ms)}
+@keyframes fChipIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+html.motion-force .svc-ladder .sv .price .n:not(.slot),html.motion-force .sheet-sum .tot{animation:brandShimmer 6s linear infinite}
+html.motion-force .svc-ladder .sv[aria-pressed="true"] .price .n:not(.slot){animation-duration:3.4s}
+@keyframes brandShimmer{to{background-position:200% center}}
+html.motion-force .built::before{animation:pawStep 2.8s var(--ease-out) infinite}
+html.motion-force .conv .hub{animation:hubPulse 3.4s var(--ease-out) infinite}
+@keyframes hubPulse{0%,100%{box-shadow:0 0 0 5px rgba(139,92,246,.22),0 0 26px 6px var(--accent-glow)}50%{box-shadow:0 0 0 13px rgba(139,92,246,.08),0 0 40px 10px var(--accent-glow)}}
+html.motion-force .conv-avail i{animation:pawStep 2.8s var(--ease-out) infinite}
+html.motion-force .const-svg circle{animation:edgeTwk 2.6s var(--ease-io) infinite}
+@keyframes edgeTwk{0%,100%{opacity:1}50%{opacity:.35}}
+html.motion-force .edge-sat{animation:edgeOrb 10s linear infinite}
+@keyframes edgeOrb{from{offset-distance:0%}to{offset-distance:100%}}
+html.motion-force .edge-aurora{animation:edgeAur linear both;animation-timeline:view();animation-range:entry 20% entry 90%}
+@keyframes edgeAur{from{opacity:0}to{opacity:.55}}
+html.motion-force .shoot{animation:shootA 1s cubic-bezier(.2,.6,.4,1) forwards}
+@keyframes shootA{0%{opacity:0;transform:rotate(var(--ang,24deg)) translateX(0)}10%{opacity:1}70%{opacity:.9}100%{opacity:0;transform:rotate(var(--ang,24deg)) translateX(-190px)}}
+html.motion-force .edge-void{animation:voidBreathe 34s var(--ease-io) infinite alternate}
+@keyframes voidBreathe{from{opacity:.78;filter:blur(1px)}to{opacity:1;filter:blur(3px)}}
+html.motion-force .edge-stars i{animation:starTwk var(--dur,4s) var(--ease-io) infinite;animation-delay:var(--del,0s)}
+@keyframes starTwk{0%,100%{opacity:var(--o,.5)}50%{opacity:calc(var(--o,.5)*.25)}}
+html.motion-force .edge:hover .edge-sign .w{animation:signflow 3.2s linear infinite;animation-delay:calc(var(--i)*.2s)}
+@keyframes signflow{from{background-position:0% 0}to{background-position:260% 0}}
+@keyframes etPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+html.motion-force .ec-caret{animation:edgeBlink 1.1s steps(1) infinite}
+html.motion-force .edge-cursor{animation:edgeBlink 1.1s steps(1) infinite}
+@keyframes edgeBlink{50%{opacity:0}}
+html.motion-force .edge:hover .edge-top svg{animation:edgeNudge 1.6s var(--ease-io) infinite}
+@keyframes edgeNudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+
+/* forced calm, the mirror of the reduce block */
+html.motion-off{scroll-behavior:auto}
+html.motion-off *,html.motion-off *::before,html.motion-off *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+html.motion-off .grain{animation:none}
+html.motion-off #fxgl,html.motion-off #fx2d{display:none!important}
+.js.fx-on.motion-off .stars-css{display:block}
+html.motion-off /* neutralise the reveal on the property the reveal actually uses. v2 nuked
+     `transform` here,html.motion-off which also killed every hover lift and every magnetic
+     offset for reduced-motion users: a 3px hover response is feedback,html.motion-off not
+     motion sickness,html.motion-off and they should still get it. */
+  .js .reveal,.js.pre.motion-off .hero h1 .li,.js.pre.motion-off .hero .h-fade{opacity:1!important;translate:none!important}
+.js.pre.motion-off .hero h1 .li{transform:none!important}
+html.motion-off .band::after{animation:none!important}
+html.motion-off /* the roads arrive already drawn: the picture survives,html.motion-off the motion does not */
+  .roads .road{animation:none!important;scale:1 1!important}
+html.motion-off .marq-track{animation-play-state:paused}
+html.motion-off .mag,html.motion-off .mag .mlbl{transform:none!important}
+html.motion-off .progress{display:none}
+html.motion-off /* the blacksite still exists in calm mode,html.motion-off it just stops moving:
+     settled glyphs,html.motion-off frozen scanlines,html.motion-off a stuck timecode. The JS loop is
+     halted separately,html.motion-off since a running loop with animations disabled
+     burns CPU for nothing. */
+  /* the reflection is a moving flourish and it renders unpredictably once its
+     drift is frozen,html.motion-off so calm mode simply does without it */
+  #bsGhost{display:none!important}
+html.motion-off #mHum,html.motion-off #bsOsd .rec,html.motion-off #bsTerm .cur,html.motion-off .mascot .pose{animation:none!important}
+html.motion-off #bsMirror .redact::after{animation:none!important;opacity:1}
+html.motion-off #bsPost{display:none}
+html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!important;opacity:0;transition:opacity .2s linear}
+
+/* the pill that surfaces the choice, shown only when the OS said reduce and
+   the visitor has not chosen yet */
+.motion-pill{
+  position:fixed;left:max(16px,env(safe-area-inset-left));bottom:max(16px,env(safe-area-inset-bottom));
+  z-index:70;display:flex;align-items:center;gap:10px;padding:10px 10px 10px 16px;border-radius:999px;
+  background:var(--e3);box-shadow:var(--rim-2),var(--sh-2);font-size:var(--fs-sm);color:var(--muted);
+  max-width:calc(100vw - 32px);flex-wrap:wrap;
+}
+.motion-pill b{color:var(--text-hi);font-weight:600}
+.motion-pill button{
+  min-height:44px;padding:8px 15px;border-radius:999px;font-weight:600;font-size:var(--fs-sm);
+  background:var(--e1);box-shadow:var(--rim-1);color:var(--text);cursor:pointer;
+}
+.motion-pill button.go{background:var(--charge);color:#fff}
+.motion-pill button:hover{box-shadow:var(--rim-2),0 0 14px -4px var(--accent-glow)}
 </style>
 </head>
 <body>
@@ -2693,11 +2810,11 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           <div class="proof"><span class="built">built already</span><a href="https://snapwyrm.com" target="_blank" rel="noopener">snapwyrm.com</a></div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--accent-hot)" role="button" tabindex="0" aria-pressed="false" data-id="landing" data-kind="build" data-amt="0" data-nm="Landing page or marketing site">
+        <article class="sv" style="--c:var(--accent-hot)" role="button" tabindex="0" aria-pressed="false" data-id="landing" data-kind="build" data-amt="80" data-nm="Landing page or marketing site">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">entry</span>
           <h3>Landing page or marketing site</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$80</span></div>
           <div class="drawer"><div>
           <p>Hand-built, fast, and animated properly. No page builder, no template.</p>
           <div class="proof"><span class="built">built already</span>the site you are on: WebGL, scroll choreography, one file</div>
@@ -2713,51 +2830,51 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           <div class="proof"><span class="built">built already</span>live event pipelines in production</div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--blue)" role="button" tabindex="0" aria-pressed="false" data-id="ai" data-kind="systems" data-amt="0" data-nm="AI features and agents">
+        <article class="sv" style="--c:var(--blue)" role="button" tabindex="0" aria-pressed="false" data-id="ai" data-kind="systems" data-amt="150" data-nm="AI features and agents">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">systems</span>
           <h3>AI features and agents</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$150</span></div>
           <div class="drawer"><div>
           <p>Chat that answers, quotes and books. Auto-reply, summarising, agent workflows.</p>
           <div class="proof"><span class="built">built already</span><a href="https://offsiteai.io" target="_blank" rel="noopener">offsiteai.io</a> &middot; live AI worker</div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--cyan)" role="button" tabindex="0" aria-pressed="false" data-id="realtime" data-kind="systems" data-amt="0" data-nm="Realtime and multiplayer">
+        <article class="sv" style="--c:var(--cyan)" role="button" tabindex="0" aria-pressed="false" data-id="realtime" data-kind="systems" data-amt="250" data-nm="Realtime and multiplayer">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">systems</span>
           <h3>Realtime and multiplayer</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$250</span></div>
           <div class="drawer"><div>
           <p>Live state, presence, and multiplayer that stays in sync under load.</p>
           <div class="proof"><span class="built">built already</span>Snapwyrm: realtime multiplayer arcade, built solo</div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--gold)" role="button" tabindex="0" aria-pressed="false" data-id="desktop" data-kind="build" data-amt="0" data-nm="Desktop app">
+        <article class="sv" style="--c:var(--gold)" role="button" tabindex="0" aria-pressed="false" data-id="desktop" data-kind="build" data-amt="400" data-nm="Desktop app">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">product</span>
           <h3>Desktop app</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$400</span></div>
           <div class="drawer"><div>
           <p>A real installable client with licensing, updates, and per-machine binding.</p>
           <div class="proof"><span class="built">built already</span>Snapwyrm DOM: Electron, licensed and fulfilled automatically</div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--mint)" role="button" tabindex="0" aria-pressed="false" data-id="pay" data-kind="commerce" data-amt="0" data-nm="Payments and licensing">
+        <article class="sv" style="--c:var(--mint)" role="button" tabindex="0" aria-pressed="false" data-id="pay" data-kind="commerce" data-amt="250" data-nm="Payments and licensing">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">commerce</span>
           <h3>Payments and licensing</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$250</span></div>
           <div class="drawer"><div>
           <p>Checkout, licence issue and validation, webhooks, automated fulfilment.</p>
           <div class="proof"><span class="built">built already</span>Shopify + Sellpass wired end to end</div>
           </div></div>
         </article>
-        <article class="sv" style="--c:var(--accent-2)" role="button" tabindex="0" aria-pressed="false" data-id="stream" data-kind="systems" data-amt="0" data-nm="Stream and overlay systems">
+        <article class="sv" style="--c:var(--accent-2)" role="button" tabindex="0" aria-pressed="false" data-id="stream" data-kind="systems" data-amt="150" data-nm="Stream and overlay systems">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">systems</span>
           <h3>Stream and overlay systems</h3>
-          <div class="price"><span class="from">from</span><span class="n slot" title="tell me your floor price">$&mdash;</span></div>
+          <div class="price"><span class="from">from</span><span class="n">$150</span></div>
           <div class="drawer"><div>
           <p>TikTok Live and stream events driving overlays, goals and in-game triggers.</p>
           <div class="proof"><span class="built">built already</span>live pipelines running on real streams</div>
@@ -2941,7 +3058,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
         <h3 class="band-title">Tell me what you&rsquo;re building.</h3>
         <p class="conv-lede">Fastest is Discord. Tell me what you're trying to build, I'll tell you
         what it costs and when you'll have it.</p>
-        <span class="conv-avail"><i></i>replies same day &middot; eastern time</span>
+        <span class="conv-avail"><i></i>usually replies within the hour &middot; eastern time</span>
       </div>
       <div class="builder" id="convBuilder">
       <div class="b-step">
@@ -3265,7 +3382,36 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
      env + shared utilities
      ====================================================================== */
   var doc = document, root = doc.documentElement;
-  var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* tri-state: the visitor's stored choice ('on' | 'off') outranks the OS
+     media query, which on Windows is just the "animation effects" switch */
+  var motionChoice = null;
+  try { motionChoice = localStorage.getItem('hsw-motion'); } catch (e0) {}
+  var reduced = motionChoice === 'on' ? false
+              : motionChoice === 'off' ? true
+              : matchMedia('(prefers-reduced-motion: reduce)').matches;
+  window.__motionOK = !reduced;
+  window.__motionSet = function (v) {  /* 'on' | 'off' | 'auto' */
+    try { v === 'auto' ? localStorage.removeItem('hsw-motion') : localStorage.setItem('hsw-motion', v); } catch (e1) {}
+    location.reload();
+  };
+  /* The OS asked for reduced motion and the visitor has not chosen: surface
+     the choice once. On Windows that query is the "animation effects" switch,
+     so plenty of people arrive here never having chosen anything. Shown once,
+     dismissable, never re-nags after either answer. */
+  if (reduced && !motionChoice) addEventListener('DOMContentLoaded', function () {
+    if (store.get('hsw-motion-seen')) return;
+    var pill = doc.createElement('div');
+    pill.className = 'motion-pill';
+    pill.innerHTML = '<span><b>animations are off</b> (system setting)</span>';
+    var yes = doc.createElement('button');
+    yes.type = 'button'; yes.className = 'go'; yes.textContent = 'turn them on';
+    yes.addEventListener('click', function () { store.set('hsw-motion-seen', '1'); window.__motionSet('on'); });
+    var no = doc.createElement('button');
+    no.type = 'button'; no.textContent = 'keep it calm';
+    no.addEventListener('click', function () { store.set('hsw-motion-seen', '1'); pill.remove(); });
+    pill.appendChild(yes); pill.appendChild(no);
+    doc.body.appendChild(pill);
+  });
   var finePtr = matchMedia('(hover: hover) and (pointer: fine)').matches;
   var saveData = !!(navigator.connection && navigator.connection.saveData);
   var live = doc.getElementById('live');
@@ -3836,6 +3982,9 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
           if (atmo.isOn()) { atmo.stop(); store.set('hsw-fx', 'off'); live.textContent = 'Effects off.'; }
           else { store.set('hsw-fx', 'on'); location.reload(); }
         } },
+      { g: 'do', l: 'Animations: force on', k: 'motion reduce effects enable full', run: function () { window.__motionSet('on'); } },
+      { g: 'do', l: 'Animations: calm', k: 'motion reduce effects disable off still', run: function () { window.__motionSet('off'); } },
+      { g: 'do', l: 'Animations: follow system', k: 'motion reduce effects auto default', run: function () { window.__motionSet('auto'); } },
       { g: 'open', l: 'Source of this page', k: 'github code repo', run: function () { open('https://github.com/snapwyrm/husky-page', '_blank', 'noopener'); } },
       { g: 'open', l: 'snapwyrm.com', k: 'arcade casino', run: function () { open('https://snapwyrm.com', '_blank', 'noopener'); } },
       { g: 'play', l: 'Minesweeper', k: 'game egg sweep', run: function () { game.open(); } },
@@ -5853,7 +6002,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
 /* the edge: constellation + mascot + clock + decode + shooting stars */
 (function () {
   var edge = document.getElementById('edge'); if (!edge) return;
-  var rm = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  var rm = (window.__motionOK !== undefined ? window.__motionOK : matchMedia('(prefers-reduced-motion: no-preference)').matches);
   // constellation: skeleton letterforms as stars + connecting lines, one <g> per letter
   var L = {
     h:[[[8,20],[8,100]],[[8,58],[30,40],[52,56],[52,100]]],
@@ -6004,13 +6153,27 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
       ]);
       if (btn.getAttribute('aria-expanded') !== 'true') btn.click();
     } },
+    motion: { d: 'animations on, off, or auto', run: function (arg) {
+      /* run() receives the whole line, name included */
+      var v = String(arg || '').replace(/^\S+\s*/, '').trim().toLowerCase();
+      if (v !== 'on' && v !== 'off' && v !== 'auto') {
+        var cur = null; try { cur = localStorage.getItem('hsw-motion'); } catch (e) {}
+        print([
+          { html: '<span class="dim">now:</span> ' + (cur === 'on' ? 'forced on' : cur === 'off' ? 'forced off' : 'following your system (' + (rm ? 'on' : 'off') + ')') },
+          { html: '<span class="dim">use</span> <span class="k">motion on</span> · <span class="k">motion off</span> · <span class="k">motion auto</span>', cls: 'dim' }
+        ]);
+        return;
+      }
+      print([{ html: 'motion ' + v + '. reloading with the new setting…', cls: 'ok' }]);
+      setTimeout(function () { window.__motionSet(v); }, 650);
+    } },
     whoami: { d: 'what your browser tells me', run: function () {
       var zone = '--';
       try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '--'; } catch (e) {}
       print([
         { html: '<span class="dim">viewport ...</span> ' + vpStr() + ' @ ' + (devicePixelRatio || 1) + 'x' },
         { html: '<span class="dim">timezone ...</span> ' + esc(zone) },
-        { html: '<span class="dim">motion .....</span> ' + (rm ? 'animation allowed' : 'reduced motion, respected') },
+        { html: '<span class="dim">motion .....</span> ' + (function(){ var o = null; try { o = localStorage.getItem('hsw-motion'); } catch (e) {} if (o === 'on') return 'full, your choice (type <span class="k">motion auto</span> to revert)'; if (o === 'off') return 'calm, your choice'; return rm ? 'animation allowed' : 'reduced by your system settings (type <span class="k">motion on</span> to override)'; })() },
         { html: '<span class="dim">frames .....</span> ' + (fpsVal || '--') + ' fps right now' },
         { html: '<span class="dim">that\u2019s all I know, and none of it leaves your machine.</span>' }
       ]);
@@ -6201,7 +6364,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   var sendLbl = builder.querySelector('.sendlbl');
   var prog = [].slice.call(builder.querySelectorAll('.b-prog i'));
   var prevT = builder.querySelector('.b-prev-t'), prev = document.getElementById('convPrev');
-  var motion = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  var motion = (window.__motionOK !== undefined ? window.__motionOK : matchMedia('(prefers-reduced-motion: no-preference)').matches);
 
   new IntersectionObserver(function (es) {
     es.forEach(function (e) { if (e.isIntersecting) stage.classList.add('go'); });
@@ -6300,7 +6463,7 @@ dialog[open]{animation:dlgIn .34s var(--spring)}
   var foot = document.getElementById('mapFoot');
   var nodes = {};
   stage.querySelectorAll('.mn[data-n]').forEach(function (n) { nodes[n.dataset.n] = n; });
-  var motion = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+  var motion = (window.__motionOK !== undefined ? window.__motionOK : matchMedia('(prefers-reduced-motion: no-preference)').matches);
 
   var EDGES = [
     ['browser','pages'],['electron','fns'],['roblox','fns'],['discord','fns'],['tiktok','py'],
