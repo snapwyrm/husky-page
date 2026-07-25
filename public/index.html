@@ -871,6 +871,18 @@ body.blacksite{background:#000}
 @media(max-width:640px){
   .blacksite .mascot{width:min(58vw,230px,60vh);top:42%}
 }
+/* Below the surface he stops being the subject and becomes a witness: small,
+   dim, in the corner, still watching. He does not descend with you, and the
+   floors need their middle back. */
+.blacksite:not(.bs-surface) .mascot{
+  left:auto;right:2vw;top:auto;bottom:2vh;
+  width:min(15vw,132px);
+  transform:none!important;opacity:.32!important;
+  transition:opacity .5s linear;
+}
+@media(max-width:700px){
+  .blacksite:not(.bs-surface) .mascot{width:min(24vw,96px);right:3vw;bottom:11vh;opacity:.26!important}
+}
 .blacksite .mascot .pose{animation:bsBreathe 3.4s var(--ease-io) infinite}
 @keyframes bsBreathe{50%{transform:scale(1.02)}}
 /* Nothing in his own stack may clip him. */
@@ -924,29 +936,60 @@ body.blacksite{background:#000}
   padding:9vh clamp(16px,5vw,64px) 0;
 }
 .bs-hd{max-width:900px;margin:0 auto 22px}
+/* Below the surface the heading gives its height back to the content. A 34px
+   title and 22px of margin was 40 of the pixels the records needed to fit. */
+.blacksite:not(.bs-surface) .bs-hd{margin-bottom:11px}
+.blacksite:not(.bs-surface) .bs-hd b{font-size:clamp(17px,2.4vw,24px);margin-top:3px}
+.blacksite:not(.bs-surface) .bs-hd span{margin-top:5px}
 .bs-hd i{display:block;font-style:normal;font-size:11px;letter-spacing:.24em;color:var(--bs-dim)}
 .bs-hd b{display:block;font-size:clamp(20px,3.6vw,34px);letter-spacing:.06em;color:var(--bs-hi);margin-top:6px}
 .bs-hd span{display:block;font-size:11.5px;letter-spacing:.2em;color:var(--bs-lbl);margin-top:8px}
 
-/* the recovered records */
-.bs-recs{max-width:900px;margin:0 auto;display:grid;gap:10px;
-  grid-template-columns:repeat(2,minmax(0,1fr));max-height:62vh;overflow:hidden;
-  -webkit-mask-image:linear-gradient(180deg,#000 84%,transparent);
-  mask-image:linear-gradient(180deg,#000 84%,transparent);
+/* ---- the recovered records -------------------------------------------------
+   Eleven of them, and every one has to be on screen: the failure mode here is
+   that the mask quietly eats the tail of the list, so a real project goes
+   missing while the heading still claims eleven. The band cannot grow to solve
+   it either, because the terminal sits along the bottom of every floor below
+   the surface, which leaves the records about half the viewport.
+   So the terse listing is the base and the detailed cards are an enhancement,
+   taken only when there is measurably room for them. That inverts this file's
+   usual max-width convention on purpose: the cards need enough height as well
+   as enough width (they overflowed a 720px-tall laptop by 18px), and expressing
+   "only when both fit" as an opt-in is the honest way to say it. Threshold is
+   derived, not taste: three rows of cards need about 400px, the band is 50vh,
+   so the cards need a 800px viewport to earn their place. */
+.bs-recs{max-width:1240px;margin:0 auto;display:grid;gap:5px;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  max-height:50vh;overflow:hidden;align-content:start;
+  -webkit-mask-image:linear-gradient(180deg,#000 94%,transparent);
+  mask-image:linear-gradient(180deg,#000 94%,transparent);
 }
-.bs-rec{border:1px solid rgba(160,140,136,.22);padding:10px 12px;font-size:11.5px;line-height:1.55}
+.bs-rec{border:1px solid rgba(160,140,136,.22);font-size:11.5px;line-height:1.4;
+  display:flex;align-items:baseline;gap:8px;padding:6px 9px}
 .bs-rec i{font-style:normal;color:var(--bs-dim);letter-spacing:.16em}
-.bs-rec b{color:var(--bs-hi);margin-left:8px;letter-spacing:.04em}
-.bs-rec p{margin:6px 0 8px;color:var(--bs-ink)}
-.bs-rec u{display:inline-block;min-width:78px;text-decoration:none;color:var(--bs-lbl);
-  font-size:10px;letter-spacing:.18em}
-.bs-rec s{text-decoration:none;color:var(--bs-ink);font-size:10.5px}
-.bs-rec u,.bs-rec s,.bs-rec em{display:inline-block;vertical-align:top}
-.bs-rec s,.bs-rec em{width:calc(100% - 84px)}
-.bs-rec em{font-style:normal;font-size:10.5px;letter-spacing:.14em}
+.bs-rec b{color:var(--bs-hi);letter-spacing:.04em;flex:1 1 auto;min-width:0}
+/* the prose and the meta rows are what the listing gives up */
+.bs-rec p,.bs-rec u,.bs-rec s{display:none}
+.bs-rec em{font-style:normal;font-size:10.5px;letter-spacing:.14em;flex:0 0 auto}
+
+/* full cards, only where they genuinely fit */
+@media (min-width:1151px) and (min-height:800px){
+  .bs-recs{grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+  .bs-rec{display:block;padding:7px 10px}
+  .bs-rec b{margin-left:8px}
+  .bs-rec p{display:block;margin:6px 0 8px;color:var(--bs-ink)}
+  .bs-rec u{display:inline-block;min-width:78px;text-decoration:none;color:var(--bs-lbl);
+    font-size:10px;letter-spacing:.18em;vertical-align:top}
+  .bs-rec s{display:inline-block;text-decoration:none;color:var(--bs-ink);font-size:10.5px;
+    vertical-align:top;width:calc(100% - 84px)}
+  .bs-rec em{display:inline-block;vertical-align:top;width:calc(100% - 84px)}
+}
 /* never colour alone: the state is always a word as well */
 .bs-rec em.ok{color:var(--bs-ok)}
 .bs-rec em.bad{color:var(--bs-bad)}
+/* retired, not broken and not live. Cool amber so it reads as a third state
+   rather than as a milder failure. */
+.bs-rec em.arc{color:#c9a26a}
 .bs-rec.dead{border-color:rgba(160,80,76,.3)}
 .bs-rec.dead b,.bs-rec.dead p,.bs-rec.dead s{color:#6d5a58}
 
@@ -981,8 +1024,18 @@ body.blacksite{background:#000}
 #bsRead .rule{color:#4a5c3a}
 #bsRead .foot{color:#8a9a78;letter-spacing:.1em}
 
-@media(max-width:900px){
-  .bs-recs{grid-template-columns:minmax(0,1fr);max-height:56vh}
+/* Eleven records do not fit as cards once the columns drop, and the failure mode
+   is the worst one available: the mask hides the tail of the list, so real
+   projects go missing while the header still claims eleven. So the cards
+   degrade into a listing instead, which is what a terse ls looks like anyway.
+   Below the full-card width every record keeps its name and its state, and
+   nothing is ever hidden. */
+@media(max-width:1150px){
+  .bs-recs{max-width:900px}
+}
+@media(max-width:700px){
+  .bs-recs{grid-template-columns:minmax(0,1fr);max-height:52vh;gap:4px;max-width:92vw}
+  .bs-rec{padding:5px 9px}
 }
 @media(max-width:640px){
   .bs-floor{padding-top:11vh}
@@ -1183,6 +1236,17 @@ body.blacksite{background:#000}
 #bsTerm .key:hover{text-decoration:underline}
 @media(max-width:640px){
   #bsTerm{top:min(62vh,520px);max-height:26vh;font-size:11px}
+}
+/* On the surface the terminal can sit in the middle of the frame. Below it the
+   floor owns that space, so the narration drops into a band along the bottom
+   and stops being printed over the records. */
+.blacksite:not(.bs-surface) #bsTerm{
+  top:auto;bottom:9vh;max-height:19vh;width:min(940px,72vw);left:38%;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 22%);
+  mask-image:linear-gradient(180deg,transparent,#000 22%);
+}
+@media(max-width:700px){
+  .blacksite:not(.bs-surface) #bsTerm{left:50%;width:92vw;bottom:16vh;max-height:15vh}
 }
 
 /* ---- controls: never corrupted, always reachable --------------------- */
@@ -3273,37 +3337,51 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
 
     <div class="bs-floor" style="--f:1" data-floor="1">
       <div class="bs-hd"><i>SECTOR 09-17</i><b>./built</b>
-        <span>6 RECORDS RECOVERED. 1 RECORD WILL NOT OPEN.</span></div>
+        <span>8 RECORDS RECOVERED. 2 ARCHIVED. 1 WILL NOT OPEN.</span></div>
+      <!-- Eleven records: his ten real projects, compressed from the cards on
+           the surface and adding nothing to them, plus the one that does not
+           exist. Two are ARCHIVED rather than VERIFIED because the page calls
+           them deprecated, and listing a retired thing as live would overstate
+           it. The line counts are the same figures the surface publishes. -->
       <div class="bs-recs">
         <div class="bs-rec"><i>01</i><b>snapwyrm/</b>
-          <p>provably-fair arcade platform, built end to end, solo. react, cloudflare pages
-             functions, d1 sql, realtime multiplayer blackjack, accounts, admin ops dashboard,
-             payments, compliance gates.</p>
+          <p>provably-fair arcade platform. built end to end, solo.</p>
           <u>HOST</u><s>snapwyrm.com</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
         <div class="bs-rec"><i>02</i><b>offsiteai/</b>
-          <p>an ai worker for contracting businesses. answers customer questions, gives instant
-             estimates, books appointments on the site, 24/7.</p>
-          <u>HOST</u><s>offsiteai.io</s><u>NOTE</u><s>built with a partner. this one he did not do alone.</s>
-          <u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+          <p>an ai worker that answers customers and books the job, 24/7. he did
+             not do this one alone.</p>
+          <u>HOST</u><s>offsiteai.io</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
         <div class="bs-rec"><i>03</i><b>minesweeper/</b>
-          <p>a minesweeper game in lua. 1,000+ member community, cross-platform account linking,
-             site roles and badges syncing in-game through a secured api.</p>
+          <p>a lua game. 1,000+ member community, accounts linked across platforms.</p>
           <u>HOST</u><s>roblox.com</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
         <div class="bs-rec"><i>04</i><b>bots/</b>
-          <p>economy, tickets, moderation, giveaways, roles, ai auto-reply. multiple bots in real
-             servers, one wired into a live web economy with audited transfers.</p>
+          <p>economy, tickets, moderation, giveaways, roles, ai auto-reply.</p>
           <u>HOST</u><s>production</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
         <div class="bs-rec"><i>05</i><b>streams/</b>
-          <p>tiktok live pipelines. chat-to-game triggers, gift and like events driving overlays
-             and goals, account-growth automations.</p>
+          <p>tiktok live pipelines driving overlays, goals, in-game triggers.</p>
           <u>HOST</u><s>live</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
         <div class="bs-rec"><i>06</i><b>dom/</b>
-          <p>electron desktop app. licensing, per-machine binding, add-on account slots, sold and
-             fulfilled automatically through the same backend.</p>
+          <p>electron desktop app. licensing, per-machine binding.</p>
           <u>HOST</u><s>shipped</s><u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
-        <div class="bs-rec dead" id="bsRec7"><i>07</i><b>██████/</b>
-          <p>██████ ███ ██ ████,
-             ██████ ██ ███, ████.</p>
+        <div class="bs-rec"><i>07</i><b>insyncpost/</b>
+          <p>a native scheduler for clip content. automation does the upload.</p>
+          <u>SIZE</u><s>21,404 lines / 45 files</s>
+          <u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>08</i><b>insynctransfer/</b>
+          <p>desktop file transfer over a private mesh. no cloud touches a byte.</p>
+          <u>SIZE</u><s>3,816 lines / 25 files</s>
+          <u>INTEGRITY</u><em class="ok">VERIFIED</em></div>
+        <div class="bs-rec"><i>09</i><b>tradebot/</b>
+          <p>algorithmic futures trading, run entirely from discord.</p>
+          <u>SIZE</u><s>42,182 lines / 150 files</s>
+          <u>INTEGRITY</u><em class="arc">ARCHIVED</em></div>
+        <div class="bs-rec"><i>10</i><b>backtest/</b>
+          <p>a research bench built so a fake edge cannot hide. with ben, the
+             other one he had help on.</p>
+          <u>SIZE</u><s>69,071 lines / 272 files</s>
+          <u>INTEGRITY</u><em class="arc">ARCHIVED</em></div>
+        <div class="bs-rec dead" id="bsRec7"><i>11</i><b>██████/</b>
+          <p>██████ ███ ██ ████, ██████ ██ ███.</p>
           <u>HOST</u><s>██████</s><u>INTEGRITY</u><em class="bad" id="bsRec7s">FAILED</em></div>
       </div>
     </div>
@@ -4715,7 +4793,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
         /* if he took the page again during the collapse, this teardown belongs
            to the previous session and must not strip the new one */
         if (black) { doc.body.classList.remove('bs-off'); return; }
-        doc.body.classList.remove('blacksite', 'bs-off', 'bs-slate', 'bs-tear', 'bs-roll', 'bs-hold');
+        doc.body.classList.remove('blacksite', 'bs-off', 'bs-slate', 'bs-tear', 'bs-roll', 'bs-hold', 'bs-surface');
         FX.setBlack(false); doc.body.style.filter = ''; aura.style.opacity = 0;
         heat = 0; var p = tier; tier = 0; bsExit.hidden = true; atmo.resume(); applyTier(p || 1);
         live.textContent = 'The light is back.';
@@ -5420,6 +5498,12 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       var f = Math.round(depth);
       if (f !== curFloor) {
         curFloor = f;
+        /* The surface is his frame: he owns the middle of it and the terminal
+           can sit wherever it likes. Every floor below is a document, and a
+           290px mascot plus a centred terminal parked over a grid of records
+           made three things fight for the same pixels. So the layout is told
+           which floor it is on and the furniture moves. */
+        doc.body.classList.toggle('bs-surface', f === 0);
         /* Only two floors are ever on camera. Toggled on the crossing, never
            per frame: this is a visibility write, and doing it every frame would
            cost more than the panels it is saving. */
@@ -5733,6 +5817,8 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       floorEls = [].slice.call(doc.querySelectorAll('.bs-floor'));
       depth = 0; depthT = 0; curFloor = -1; userScrolled = false; dirDepth = 0;
       lastDepthT = 0; lastFloorWrite = 0; lastTick = 0;
+      /* start on the surface, before the first frame decides */
+      doc.body.classList.add('bs-surface');
       sizeRail();
       scrollTo(0, 0);
       addEventListener('scroll', onScroll, { passive: true });
@@ -5828,14 +5914,26 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       ],
       [ /* 1, ./built */
         { c: 'cmd', t: 'cd ./built && ls' },
-        { c: '', t: 'snapwyrm/  offsiteai/  minesweeper/  bots/  streams/  dom/  ██████/',
-                a: 'snapwyrm, offsiteai, minesweeper, bots, streams, dom, and one redacted directory' },
-        { c: 'sys', t: '7 records. 6 verified. 1 will not open.' },
+        /* columned over three lines the way a real ls would, rather than one
+           line long enough to wrap in the middle of a directory name. Ten real
+           directories and the one that is not there, so the visible listing and
+           the spoken one have to agree: eleven entries in both. */
+        { c: '', t: 'snapwyrm/        offsiteai/       minesweeper/     bots/',
+                a: 'snapwyrm, offsiteai, minesweeper, bots' },
+        { c: '', t: 'streams/         dom/             insyncpost/      insynctransfer/',
+                a: 'streams, dom, insyncpost, insynctransfer' },
+        { c: '', t: 'tradebot/        backtest/        ██████/',
+                a: 'tradebot, backtest, and one redacted directory' },
+        { c: 'sys', t: '11 records. 8 recovered. 2 archived. 1 will not open.' },
         /* this line licenses everything after it, so it lands next to the evidence */
         { c: 'him', t: 'everything he told you about himself up there is true.' },
         { c: 'cmd', t: 'cat ./built/██████/readme', a: 'cat the redacted readme' },
         { c: 'err', t: 'permission denied: it reads itself now' },
         { c: 'him', t: 'he does not remember writing that one.' },
+        /* the presence writes for the first time here: the failed record quietly
+           reclassifies itself while it is still on screen, and nothing in the
+           terminal acknowledges that it happened */
+        { c: 'dim', t: 'two records retired. the archive keeps them anyway.', fx: 'pend' },
         { c: 'cmd', t: 'ls ../building' },
         { c: '', t: 'market-terminal/' },
         /* filed under building, not built, because that is what the real page
@@ -5895,9 +5993,13 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       /* latched: scrolling back up returns the camera, never the story */
       if (!on || f <= termFloor || !FLOOR_SCRIPT[f]) return;
       termFloor = f;
-      var rows = FLOOR_SCRIPT[f], i = 0;
+      var rows = FLOOR_SCRIPT[f], i = 0, mine = f;
       function next() {
-        if (!on || i >= rows.length) return;
+        /* The read head follows the visitor. Without this check the previous
+           floor's chain keeps firing into the same terminal and the two scripts
+           interleave, so descending mid-sentence produced things like the
+           record count landing in the middle of the sign-on sequence. */
+        if (!on || mine !== termFloor || i >= rows.length) return;
         var row = rows[i++];
         var div = doc.createElement('div');
         div.className = 'ln ' + row.c;
@@ -5907,6 +6009,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
         narrate(row.a || row.t);
         while (term.childNodes.length > 14) term.removeChild(term.firstChild);
         if (row.c === 'him' && !muted && !calm) FX.growl();
+        if (row.fx) floorFx(row.fx);
         var gap = row.wait || (calm ? 900 : (row.c === 'him' ? 1500 : 520 + Math.random() * 620));
         termTimers.push(setTimeout(next, gap));
       }
@@ -5914,6 +6017,27 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
     }
     function startTerminal() { term.textContent = ''; termFloor = -1; playFloor(0); }
     function stopTerminal() { termTimers.forEach(clearTimeout); termTimers = []; }
+
+    /* ---- the presence, write #1 -----------------------------------------
+       It does not speak, it edits. The record that failed to open quietly
+       reclassifies itself to PENDING a few seconds later, while it is still on
+       screen, and nothing announces it: no sound, no terminal line, no live
+       region. Either you were looking at it or you were not.
+       Deliberately absent from #bsNarr for the same reason it has no sound. A
+       screen reader gets the record and its state; it does not get told that
+       something changed it, because a sighted visitor is not told either. */
+    function floorFx(kind) {
+      if (kind !== 'pend') return;
+      var s = session;
+      termTimers.push(setTimeout(function () {
+        if (!on || s !== session) return;
+        var el = doc.getElementById('bsRec7s');
+        if (el && el.textContent === 'FAILED') {
+          el.textContent = 'PENDING';
+          el.className = 'arc';
+        }
+      }, calm ? 2200 : 3000));
+    }
 
     /* ---- the payoff. A bonus, never a gate: reachable without audio,
        motion, or a mouse. */
