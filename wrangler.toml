@@ -5,6 +5,14 @@ name = "husky-page"
 main = "worker.js"
 compatibility_date = "2026-07-13"
 
+# GITHUB_TOKEN has now disappeared from the deployed Worker twice, both times
+# right after a push. That is the documented behaviour of `wrangler deploy`:
+# it treats this file as the source of truth for plain-text vars and removes
+# any it does not find here. Encrypted secrets survive, plain vars do not.
+# keep_vars stops a deploy from clearing anything set in the dashboard, so the
+# token holds however it was added.
+keep_vars = true
+
 [assets]
 directory = "./public"
 binding = "ASSETS"

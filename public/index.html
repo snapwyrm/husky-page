@@ -1772,6 +1772,7 @@ body.blacksite{background:#000}
 .mrow[data-cols="5"]{grid-template-columns:repeat(5,minmax(0,1fr))}
 .mrow[data-cols="2"]{grid-template-columns:repeat(2,minmax(0,1fr))}
 .mrow[data-cols="4"]{grid-template-columns:repeat(4,minmax(0,1fr))}
+.mrow[data-cols="6"]{grid-template-columns:repeat(6,minmax(0,1fr))}
 .mrow[data-cols="1"]{grid-template-columns:minmax(0,1fr)}
 .mlab{position:absolute;left:0;top:-19px;font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted-2)}
 .mn{position:relative;border-radius:13px;padding:12px 14px;background:var(--e2);box-shadow:var(--rim-1);cursor:default;
@@ -1801,12 +1802,12 @@ body.blacksite{background:#000}
 .also-k{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted-2)}
 .also .tg{font-size:12.5px;padding:5px 12px}
 @media(max-width:900px){
-  .mrow[data-cols="5"],.mrow[data-cols="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mrow[data-cols="5"],.mrow[data-cols="4"],.mrow[data-cols="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mapWires{display:none}
   .grid-map{gap:26px}
 }
 @media(max-width:900px){
-  .mrow[data-cols="5"],.mrow[data-cols="4"]{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mrow[data-cols="5"],.mrow[data-cols="4"],.mrow[data-cols="6"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   #mapWires{display:none}
   .grid-map{gap:26px}
 }
@@ -2719,7 +2720,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       </div>
     </div>
     <div class="hm-tip" id="hmTip" aria-hidden="true"></div>
-    <script type="application/json" id="contribFallback">{"asOf":"2026-07-22","total":1771,"days":{"2026-03-15":7,"2026-03-19":6,"2026-03-30":6,"2026-03-31":27,"2026-04-01":7,"2026-04-02":1,"2026-04-06":3,"2026-04-07":4,"2026-04-09":9,"2026-04-13":5,"2026-04-15":5,"2026-04-16":12,"2026-04-22":1,"2026-04-23":3,"2026-04-24":40,"2026-04-25":15,"2026-04-27":16,"2026-04-28":9,"2026-04-29":2,"2026-05-01":1,"2026-05-03":2,"2026-05-04":7,"2026-05-05":18,"2026-05-06":22,"2026-05-09":18,"2026-05-10":1,"2026-05-11":1,"2026-05-16":12,"2026-05-17":40,"2026-05-18":2,"2026-05-19":14,"2026-05-20":4,"2026-05-21":15,"2026-05-25":1,"2026-05-26":12,"2026-05-27":1,"2026-05-29":5,"2026-06-05":60,"2026-06-06":37,"2026-06-07":91,"2026-06-08":117,"2026-06-09":162,"2026-06-10":111,"2026-06-11":61,"2026-06-12":5,"2026-06-15":12,"2026-06-16":98,"2026-06-17":18,"2026-06-18":115,"2026-06-19":82,"2026-06-20":17,"2026-06-21":5,"2026-06-24":11,"2026-06-26":1,"2026-06-27":17,"2026-06-28":8,"2026-06-29":43,"2026-06-30":104,"2026-07-01":73,"2026-07-02":21,"2026-07-03":30,"2026-07-07":12,"2026-07-08":5,"2026-07-12":19,"2026-07-13":32,"2026-07-19":17,"2026-07-21":28,"2026-07-22":5}}</script>
+    <script type="application/json" id="contribFallback">{"asOf":"2026-07-25","total":1794,"days":{"2026-03-15":7,"2026-03-19":6,"2026-03-30":6,"2026-03-31":27,"2026-04-01":7,"2026-04-02":1,"2026-04-06":3,"2026-04-07":4,"2026-04-09":9,"2026-04-13":5,"2026-04-15":5,"2026-04-16":12,"2026-04-22":1,"2026-04-23":3,"2026-04-24":40,"2026-04-25":15,"2026-04-27":16,"2026-04-28":9,"2026-04-29":2,"2026-05-01":1,"2026-05-03":2,"2026-05-04":7,"2026-05-05":18,"2026-05-06":22,"2026-05-09":18,"2026-05-10":1,"2026-05-11":1,"2026-05-16":12,"2026-05-17":40,"2026-05-18":2,"2026-05-19":14,"2026-05-20":4,"2026-05-21":15,"2026-05-25":1,"2026-05-26":12,"2026-05-27":1,"2026-05-29":5,"2026-06-05":60,"2026-06-06":37,"2026-06-07":91,"2026-06-08":117,"2026-06-09":162,"2026-06-10":111,"2026-06-11":61,"2026-06-12":5,"2026-06-15":12,"2026-06-16":98,"2026-06-17":18,"2026-06-18":115,"2026-06-19":82,"2026-06-20":17,"2026-06-21":5,"2026-06-24":11,"2026-06-26":1,"2026-06-27":17,"2026-06-28":8,"2026-06-29":43,"2026-06-30":104,"2026-07-01":73,"2026-07-02":21,"2026-07-03":30,"2026-07-07":12,"2026-07-08":5,"2026-07-12":19,"2026-07-13":32,"2026-07-19":17,"2026-07-21":28,"2026-07-22":16,"2026-07-23":2,"2026-07-24":10}}</script>
   </section>
 
   <!-- ================= about ================= -->
@@ -2783,9 +2784,9 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
     </div>
     <div class="svc-ladder reveal">
       <div class="filters" id="svcFilters">
-        <button class="f" type="button" aria-pressed="true" data-k="all" style="--i:0">everything<i>12</i></button>
+        <button class="f" type="button" aria-pressed="true" data-k="all" style="--i:0">everything<i>13</i></button>
         <button class="f" type="button" aria-pressed="false" data-k="build" style="--i:1">build it<i>5</i></button>
-        <button class="f" type="button" aria-pressed="false" data-k="systems" style="--i:2">systems<i>6</i></button>
+        <button class="f" type="button" aria-pressed="false" data-k="systems" style="--i:2">systems<i>7</i></button>
         <button class="f" type="button" aria-pressed="false" data-k="integrate" style="--i:3">integrations<i>2</i></button>
         <button class="f" type="button" aria-pressed="false" data-k="commerce" style="--i:4">money<i>2</i></button>
       </div>
@@ -2890,6 +2891,16 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
           <div class="proof"><span class="built">built already</span><a href="https://offsiteai.io" target="_blank" rel="noopener">offsiteai.io</a> &middot; an AI worker that quotes and books jobs 24/7</div>
           </div></div>
         </article>
+        <article class="sv" style="--c:var(--mint)" role="button" tabindex="0" aria-pressed="false" data-id="trading" data-kind="systems" data-amt="0" data-nm="Algorithmic trading systems">
+          <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
+          <span class="tier">scoped per job</span>
+          <h3>Algorithmic trading systems</h3>
+          <div class="price"><span class="from">quote</span><span class="n">DM</span></div>
+          <div class="drawer"><div>
+          <p>Signal engines, strategy research benches, and the pipelines that run them. Market data in, orders out, and statistics honest enough to kill your own idea.</p>
+          <div class="proof"><span class="built">built already</span>BacktestStation, 69k lines &middot; a Discord-run futures bot, 42k lines</div>
+          </div></div>
+        </article>
         <article class="sv big" style="--c:var(--gold)" role="button" tabindex="0" aria-pressed="false" data-id="roblox" data-kind="systems" data-amt="0" data-nm="Roblox systems and scripting">
           <span class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg></span>
           <span class="tier">scoped per job</span>
@@ -2954,6 +2965,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
         <button class="trace" type="button" aria-pressed="false" data-r="offsite">OffsiteAI</button>
         <button class="trace" type="button" aria-pressed="false" data-r="dom">Desktop app</button>
         <button class="trace" type="button" aria-pressed="false" data-r="stream">Stream automation</button>
+          <button class="trace" type="button" aria-pressed="false" data-r="trading">Trading systems</button>
       </div>
     </div>
     <div class="grid-map" id="gridMap">
@@ -2967,7 +2979,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
         <div class="mn" data-n="browser" data-d="The public surface. Hand-written HTML, CSS and JS so a cold load on a phone still comes up fast." data-t="JavaScript"><span class="pin"></span><span class="t">Browser</span><span class="s">JavaScript</span></div>
         <div class="mn" data-n="electron" data-d="Snapwyrm DOM: a licensed desktop client with per-machine binding, talking to the same backend as the site." data-t="Electron"><span class="pin"></span><span class="t">Desktop app</span><span class="s">Electron</span></div>
         <div class="mn" data-n="roblox" data-d="Husky\u2019s Minesweeper runs in-engine in Lua and links accounts across to the web economy." data-t="Lua"><span class="pin"></span><span class="t">Roblox client</span><span class="s">Lua</span></div>
-        <div class="mn" data-n="discord" data-d="Where the community actually lives: economy, tickets, moderation, giveaways and roles." data-t="Discord API"><span class="pin"></span><span class="t">Discord client</span><span class="s">Discord API</span></div>
+        <div class="mn" data-n="discord" data-d="Where the community actually lives: economy, tickets, moderation, giveaways and roles, and the only interface the trading bot has." data-t="Discord API"><span class="pin"></span><span class="t">Discord client</span><span class="s">Discord API</span></div>
         <div class="mn" data-n="tiktok" data-d="Live chat, gift and like events become game triggers and overlay state in real time." data-t="events"><span class="pin"></span><span class="t">TikTok Live</span><span class="s">events</span></div>
       </div>
       <div class="mrow" data-cols="1">
@@ -2984,13 +2996,14 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
         <div class="mn" data-n="d1" data-d="State of record: balances, cosmetics, licences and audited transfers. SQL sitting one hop from the Worker." data-t="SQL"><span class="pin"></span><span class="t">D1</span><span class="s">SQL</span></div>
         <div class="mn slot" data-slot="data">+ your other store</div>
       </div>
-      <div class="mrow" data-cols="4">
+      <div class="mrow" data-cols="6">
         <span class="mlab">external</span>
         <div class="mn" data-n="discordapi" data-d="Bots wired straight into the live web economy, with transfers audited on both sides." data-t="bots &middot; roles"><span class="pin"></span><span class="t">Discord API</span><span class="s">bots &middot; roles</span></div>
         <div class="mn" data-n="shopify" data-d="Checkout and fulfilment for cosmetics and licences, automated end to end." data-t="checkout"><span class="pin"></span><span class="t">Shopify</span><span class="s">checkout</span></div>
         <div class="mn" data-n="sellpass" data-d="Licence issue and validation for the desktop app and add-on account slots." data-t="licensing"><span class="pin"></span><span class="t">Sellpass</span><span class="s">licensing</span></div>
         <div class="mn" data-n="ai" data-d="OffsiteAI\u2019s worker: answers customer questions and turns a conversation into a qualified lead." data-t="APIs"><span class="pin"></span><span class="t">AI models</span><span class="s">APIs</span></div>
-      </div>
+          <div class="mn" data-n="feed" data-d="Market data in: a Databento feed the signal engine consumes to score setups against a model trained on years of outcomes." data-t="Databento"><span class="pin"></span><span class="t">market data</span><span class="s">Databento</span></div>
+          <div class="mn" data-n="broker" data-d="Orders out: signals execute through TradersPost into Tradovate, so the engine never touches a broker API directly." data-t="TradersPost &middot; Tradovate"><span class="pin"></span><span class="t">execution</span><span class="s">TradersPost</span></div>      </div>
     </div>
     <div class="map-foot" id="mapFoot"><b>Snapwyrm</b> Browser to Pages to a Worker to D1, with Discord, Shopify and Sellpass hanging off the API. <span class="mono">the whole platform, built solo</span></div>
     <div class="langs">
@@ -6468,7 +6481,8 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
   var EDGES = [
     ['browser','pages'],['electron','fns'],['roblox','fns'],['discord','fns'],['tiktok','py'],
     ['pages','fns'],['fns','py'],['fns','d1'],['py','d1'],
-    ['fns','discordapi'],['fns','shopify'],['fns','sellpass'],['fns','ai']
+    ['fns','discordapi'],['fns','shopify'],['fns','sellpass'],['fns','ai'],
+    ['discord','py'],['py','feed'],['py','broker']
   ];
   var ROUTES = {
     snapwyrm:{ n:['browser','pages','fns','d1','discordapi','shopify','sellpass'],
@@ -6477,6 +6491,7 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
     bots:{ n:['discord','fns','py','d1','discordapi'], t:'Bots run against the live economy: every transfer hits the same D1 tables the website reads.', m:'audited transfers, both sides' },
     offsite:{ n:['browser','pages','fns','ai','d1'], t:'A chat widget on the client, a Worker in the middle, a model at the end, conversations stored as leads.', m:'co-built, live' },
     dom:{ n:['electron','fns','d1','sellpass','shopify'], t:'The desktop client authenticates against the same backend, with licences issued and bound per machine.', m:'Electron, licensed and fulfilled automatically' },
+    trading:{ n:['discord','py','feed','broker'], t:'Market data feeds a Python signal engine, orders execute through a broker bridge, and Discord is the only surface: no dashboard to babysit.', m:'research bench and live engine, both Python' },
     stream:{ n:['tiktok','py','fns','d1'], t:'Live events land in a Python pipeline, get normalised, and drive overlays and in-game triggers.', m:'realtime, no request cycle' }
   };
 
@@ -6580,7 +6595,9 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
     (function step(now) {
       var k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
       shown = Math.round(from + (to - from) * e);
-      tot.firstChild.nodeValue = '$' + shown.toLocaleString();
+      /* only ever write the counter's own text node: in quote-only state the
+         first child is the label span, and writing it would overwrite it */
+      if (tot.firstChild && tot.firstChild.nodeType === 3) tot.firstChild.nodeValue = '$' + shown.toLocaleString();
       if (k < 1) raf = requestAnimationFrame(step);
     })(performance.now());
   }
@@ -6611,16 +6628,19 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       list.appendChild(g);
     }
     tot.textContent = '';
-    tot.appendChild(document.createTextNode('$' + shown.toLocaleString()));
-    if (dm) { var q = document.createElement('span'); q.style.cssText = 'font-family:var(--mono);font-size:13px;letter-spacing:.06em;-webkit-text-fill-color:var(--muted-2)'; q.textContent = ' + quote'; tot.appendChild(q); }
+    /* a quote-only pick has no floor, so printing "$0 + quote" would say the
+       work is free. The words stand alone and the counter sits this one out. */
+    var quoteOnly = picked.length > 0 && sum === 0;
+    if (!quoteOnly) tot.appendChild(document.createTextNode('$' + shown.toLocaleString()));
+    if (dm) { var q = document.createElement('span'); q.style.cssText = 'font-family:var(--mono);font-size:' + (quoteOnly ? '20px' : '13px') + ';letter-spacing:.06em;-webkit-text-fill-color:var(--muted-2)'; q.textContent = quoteOnly ? 'by quote' : ' + quote'; tot.appendChild(q); }
     var plus = document.createElement('span');
     plus.className = 'plus' + (ghost && picked.indexOf(ghost) < 0 && +ghost.dataset.amt ? ' on' : '');
     plus.textContent = ghost && picked.indexOf(ghost) < 0 && +ghost.dataset.amt ? '+$' + (+ghost.dataset.amt).toLocaleString() : '';
     tot.appendChild(plus);
-    tween(sum);
+    if (quoteOnly) { cancelAnimationFrame(raf); shown = 0; } else tween(sum);
     var names = picked.map(function (c) { return '- ' + c.dataset.nm; });
     send.href = 'mailto:husky@snapwyrm.com?subject=' + encodeURIComponent('Estimate: ' + (picked.length ? picked.length + ' item' + (picked.length > 1 ? 's' : '') : '')) +
-      '&body=' + encodeURIComponent(names.join('\n') + (picked.length ? '\n\nStarts at: $' + sum.toLocaleString() + (dm ? ' + quote' : '') : '') + '\n\nWhat I\u2019m building:\n');
+      '&body=' + encodeURIComponent(names.join('\n') + (picked.length ? (sum ? '\n\nStarts at: $' + sum.toLocaleString() + (dm ? ' + quote' : '') : '\n\nQuote requested, no floor price on these.') : '') + '\n\nWhat I\u2019m building:\n');
   }
   function toggle(c) { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); render(); }
   cards.forEach(function (c) {
@@ -6769,18 +6789,18 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
       blurb:'Native desktop file transfer across a private Tailscale mesh. No cloud touches a byte.',
       long:'Built because moving files between four personal PCs across two collaborators should not require Google Drive or third-party SaaS. A Tauri shell wraps a Vue 3 UI on top of an axum HTTP server in Rust, and everything routes through Tailscale. Aesthetic codename: Stellar Cartography.',
       tags:['Rust','Tauri','axum','Vue 3','Tailscale'], art:{ type:'shot', src:'/assets/work/insynctransfer.webp' } },
-    { id:'tradebot', name:'InSync Trade Bot', kicker:'algorithmic futures trading', status:'deprecated', c:'#ffd76b', cat:'auto',
+    { id:'tradebot', name:'InSync Trade Bot', kicker:'algorithmic futures trading', status:'deprecated', c:'#ffd76b', cat:'trading',
       loc:42182, files:150, lang:'Python', dep:'consolidated into InSync, the desktop app',
       blurb:'End-to-end algorithmic trading on Nasdaq futures, run entirely from Discord.',
       long:'A Python signal engine consumes Databento data, runs multiple parameter profiles in parallel, and executes through TradersPost into Tradovate. Discord is the only interface: slash commands for status, open trades, recent trades, journal, flatten, pause, resume. ML scoring filters live signals against a model trained on years of historical setup outcomes, retrained weekly on a walk-forward schedule, and reconciliation against broker CSV exports catches drift before it compounds.',
       tags:['Python','Databento','ML','Discord API'], art:{ type:'icon', icon:'chart' } },
-    { id:'backtest', name:'BacktestStation', kicker:'futures strategy research · with Ben', status:'deprecated', c:'#22d3ee', cat:'auto',
+    { id:'backtest', name:'BacktestStation', kicker:'futures strategy research · with Ben', status:'deprecated', c:'#22d3ee', cat:'trading',
       loc:69071, files:272, lang:'Python', dep:'consolidated into InSync, the desktop app',
       blurb:'A standalone research bench for futures strategies, built so a fake edge cannot hide.',
       long:'Pulls bar data from a partitioned warehouse covering MNQ, MES and MYM going back years. Walk-forward backtests, parameter sweeps and regime-sliced statistics, built so an "edge" that only works in trending markets cannot masquerade as universal. Vue 3 + Tailwind frontend, Python + DuckDB backend, warehouse mirrored to Cloudflare R2 so collaborators pull subsets without exposing the source machine.',
       tags:['Python','DuckDB','Vue 3','R2','walk-forward'], art:{ type:'shot', src:'/assets/work/backteststation.webp' } }
   ];
-  var CATS = [ {k:'all',l:'everything'}, {k:'web',l:'web apps'}, {k:'game',l:'games'}, {k:'bot',l:'bots'}, {k:'auto',l:'automation'}, {k:'desktop',l:'desktop'} ];
+  var CATS = [ {k:'all',l:'everything'}, {k:'web',l:'web apps'}, {k:'game',l:'games'}, {k:'bot',l:'bots'}, {k:'auto',l:'automation'}, {k:'trading',l:'trading'}, {k:'desktop',l:'desktop'} ];
   function artHtml(p, cls) {
     if (p.art.type === 'icon') return '<div class="art ' + cls + '"><span class="ico">' + ICONS[p.art.icon] + '</span></div>';
     return '<div class="art ' + cls + (p.art.type === 'mark' ? ' mark' : '') + '"><img src="' + p.art.src + '" alt="' + p.name + '" loading="lazy"></div>';
