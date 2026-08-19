@@ -123,9 +123,8 @@ a{color:inherit}
 .brand{
   font-family:var(--font-display); font-weight:700; font-size:19px;
   letter-spacing:-.02em; color:var(--text-hi); text-decoration:none;
-  display:flex; align-items:center; gap:9px;
+  display:flex; align-items:center;
 }
-.brand img{width:26px;height:26px}
 .top nav{margin-left:auto; display:flex; gap:26px; align-items:center}
 .top nav a{
   font-size:14px; color:var(--muted); text-decoration:none;
@@ -145,7 +144,6 @@ a{color:inherit}
    The claim is a sentence that the grid below immediately proves.
    ============================================================ */
 .open{padding:clamp(56px,9vw,116px) 0 clamp(36px,5vw,60px)}
-.open .wrap{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:40px; align-items:end}
 .overline{
   font-family:var(--font-mono); font-size:12.5px; color:var(--muted-2);
   letter-spacing:.01em; margin:0 0 22px;
@@ -161,28 +159,6 @@ h1{
 h1 .dim{color:var(--muted)}
 .open p.sub{
   margin:26px 0 0; max-width:56ch; font-size:17px; color:var(--lead);
-}
-
-/* ---- Fluke, the signature ------------------------------------
-   A 17-frame hand-drawn rig already sat in this repo doing nothing
-   but bobbing in the hero. Here he reads the page with you: hover
-   any project and he reacts to that specific one.
-   -------------------------------------------------------------- */
-.fluke{
-  width:clamp(120px,15vw,196px); justify-self:end; position:relative;
-}
-.fluke img{
-  width:100%; filter:drop-shadow(0 14px 34px rgba(0,0,0,.6));
-  transition:opacity .13s ease;
-}
-.fluke figcaption{
-  font-family:var(--font-mono); font-size:11px; color:var(--muted-2);
-  text-align:center; margin-top:10px; min-height:1.4em;
-  transition:color .18s ease;
-}
-@media (max-width:860px){
-  .open .wrap{grid-template-columns:1fr}
-  .fluke{justify-self:start; width:132px; order:-1}
 }
 
 /* ============================================================
@@ -324,17 +300,19 @@ h1 .dim{color:var(--muted)}
   margin:0 0 12px; color:var(--text-hi); line-height:1.05;
 }
 .rates .lede, .about .lede{color:var(--muted); margin:0 0 34px; max-width:60ch}
-table{width:100%; border-collapse:collapse; font-size:15px}
-th{
-  text-align:left; font-family:var(--font-mono); font-weight:400;
-  font-size:11.5px; color:var(--muted-2); padding:0 0 11px;
-  border-bottom:1px solid var(--rule);
-}
-th:last-child, td:last-child{text-align:right}
-td{padding:15px 0; border-bottom:1px solid var(--rule); vertical-align:top}
-td.what{color:var(--text-hi)}
-td.what span{display:block; color:var(--muted); font-size:13.5px; margin-top:3px}
-td.price{font-family:var(--font-mono); color:var(--accent-2); white-space:nowrap}
+/* No price column. Husky's call: a number on the page anchors the
+   quote before he knows the scope, and a low "starting at" figure
+   discourages the people worth talking to. Every job is quoted on
+   its own, so the page lists capability and the conversation sets
+   the price. */
+.does{list-style:none; margin:0; padding:0; display:grid; gap:1px;
+  grid-template-columns:repeat(auto-fit,minmax(290px,1fr));
+  background:var(--rule); border:1px solid var(--rule);
+  border-radius:10px; overflow:hidden}
+.does li{background:var(--bg-2); padding:17px 19px}
+.does b{display:block; color:var(--text-hi); font-weight:600; font-size:15.5px;
+  font-family:var(--font-display); letter-spacing:-.012em}
+.does span{display:block; margin-top:4px; color:var(--muted); font-size:13.5px; line-height:1.5}
 .rates .terms{
   margin-top:26px; font-size:14px; color:var(--muted);
   display:flex; flex-wrap:wrap; gap:8px 26px;
@@ -415,7 +393,7 @@ html.motion-off .item:hover{translate:none}
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="#top"><img src="/assets/mascot/husky-base.webp" alt="">husky</a>
+    <a class="brand" href="#top">husky</a>
     <nav>
       <a href="#work">Work</a>
       <a href="#rates">Rates</a>
@@ -432,10 +410,6 @@ html.motion-off .item:hover{translate:none}
       <h1>Ten things I built.<br><span class="dim">Eight are still running.</span></h1>
       <p class="sub">Web apps, algorithmic trading systems, Roblox games, Discord bots and desktop software. Start to finish, on my own. Everything below is live and clickable, so you can check the work instead of taking my word for it.</p>
     </div>
-    <figure class="fluke">
-      <img id="flukeImg" src="/assets/mascot/husky-base.webp" alt="Fluke, the mascot">
-      <figcaption id="flukeCap">this is Fluke</figcaption>
-    </figure>
   </div>
 </section>
 
@@ -479,23 +453,20 @@ html.motion-off .item:hover{translate:none}
 
 <section class="rates" id="rates">
   <div class="wrap">
-    <h2>What things cost</h2>
-    <p class="lede">Fixed price, agreed before anything starts. No hourly billing, no surprise invoice at the end.</p>
-    <table>
-      <thead><tr><th>Build</th><th>Starting at</th></tr></thead>
-      <tbody>
-        <tr><td class="what">Discord bot<span>Economy, tickets, moderation, roles, auto-reply</span></td><td class="price">$90</td></tr>
-        <tr><td class="what">Landing page or marketing site<span>Built, deployed, and set up to be found in search</span></td><td class="price">$80</td></tr>
-        <tr><td class="what">Web app, tool, or dashboard<span>Frontend, backend, database, auth</span></td><td class="price">$120</td></tr>
-        <tr><td class="what">AI integration<span>An agent that answers, qualifies, and books</span></td><td class="price">$150</td></tr>
-        <tr><td class="what">Stream or social automation<span>Live pipelines, overlays, goals, in-game triggers</span></td><td class="price">$150</td></tr>
-        <tr><td class="what">Automation pipeline<span>If it has an API, it can be wired up</span></td><td class="price">$300</td></tr>
-        <tr><td class="what">Realtime system<span>Multiplayer, live data, anything with a socket</span></td><td class="price">$250</td></tr>
-        <tr><td class="what">Payments and licensing<span>Checkout, entitlements, per-machine binding</span></td><td class="price">$250</td></tr>
-        <tr><td class="what">Desktop application<span>Electron or Tauri, signed and distributable</span></td><td class="price">$400</td></tr>
-        <tr><td class="what">Roblox systems<span>Data layers, economies, leaderboards, anti-exploit</span></td><td class="price">message me</td></tr>
-      </tbody>
-    </table>
+    <h2>What I build</h2>
+    <p class="lede">Every job gets quoted on its own, once I know what you actually need. Tell me what you are building and you get a fixed price back, agreed before anything starts. No hourly billing and no surprise invoice at the end.</p>
+    <ul class="does">
+      <li><b>Web apps, tools and dashboards</b><span>Frontend, backend, database and auth, start to finish</span></li>
+      <li><b>Roblox systems</b><span>Data layers, economies, leaderboards, trading, anti-exploit</span></li>
+      <li><b>Discord bots</b><span>Economy, tickets, moderation, giveaways, roles, auto-reply</span></li>
+      <li><b>AI integrations</b><span>An agent that answers customers, qualifies them and books the job</span></li>
+      <li><b>Automation pipelines</b><span>If it has an API, it can be wired up. Often even if it does not</span></li>
+      <li><b>Stream and social automation</b><span>Live pipelines, overlays, goals and in-game triggers</span></li>
+      <li><b>Realtime systems</b><span>Multiplayer, live data, anything running over a socket</span></li>
+      <li><b>Payments and licensing</b><span>Checkout, entitlements and per-machine binding</span></li>
+      <li><b>Desktop applications</b><span>Electron or Tauri, signed and distributable</span></li>
+      <li><b>Landing pages and sites</b><span>Built, deployed, and set up to be found in search</span></li>
+    </ul>
     <p class="terms"><span><b>50% up front</b>, always</span> <span>Scope in writing before work starts</span> <span>Source handed over on final payment</span></p>
   </div>
 </section>
@@ -526,7 +497,6 @@ html.motion-off .item:hover{translate:none}
 
 <footer>
   <div class="wrap">
-    <span>Husky, eastern time</span>
     <a href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
     <a href="https://github.com/snapwyrm/husky-page">source of this page</a>
   </div>
@@ -617,7 +587,7 @@ function card(p){
   if (p.hrefLabel) plate.push('<span class="host">'+esc(p.hrefLabel)+' ↗</span>');
 
   return '<'+tag+attrs+' class="item'+(p.wide?' wide':'')+(p.status==='folded'?' folded':'')+
-    '" style="--ca:'+p.c+'" data-face="'+p.face+'" data-name="'+esc(p.name)+'">'+
+    '" style="--ca:'+p.c+'" data-name="'+esc(p.name)+'">'+
     art+
     '<div class="body">'+
       '<h3>'+esc(p.name)+'</h3>'+
@@ -633,22 +603,6 @@ document.getElementById('grid').innerHTML = P.map(card).join('');
 var live = P.filter(function(p){ return p.status !== 'folded'; }).length;
 document.getElementById('shelfCount').textContent =
   P.length + ' projects, ' + live + ' still running';
-
-/* ---- Fluke reads along with you ----------------------------
-   Preload every face so the swap never flickers.
-   ------------------------------------------------------------ */
-var img = document.getElementById('flukeImg'),
-    cap = document.getElementById('flukeCap'),
-    baseSrc = '/assets/mascot/husky-base.webp',
-    faces = {};
-
-P.forEach(function(p){
-  if (p.face && !faces[p.face]){
-    var i = new Image();
-    i.src = '/assets/mascot/husky-'+p.face+'.webp';
-    faces[p.face] = i.src;
-  }
-});
 
 /* ============================================================
    PROOF OF WORK. Date math, the windowing rule and the MIN_WEEKS
@@ -823,20 +777,6 @@ P.forEach(function(p){
     document.body.appendChild(pill);
   });
 })();
-
-var restore;
-document.getElementById('grid').addEventListener('pointerover', function(e){
-  var it = e.target.closest('.item'); if (!it) return;
-  clearTimeout(restore);
-  img.src = faces[it.dataset.face] || baseSrc;
-  cap.textContent = it.dataset.name;
-});
-document.getElementById('grid').addEventListener('pointerleave', function(){
-  restore = setTimeout(function(){
-    img.src = baseSrc;
-    cap.textContent = 'this is Fluke';
-  }, 260);
-});
 </script>
 </body>
 </html>
