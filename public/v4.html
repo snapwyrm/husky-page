@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Husky · solo developer</title>
+<meta name="description" content="Ten things I built. Eight are still running. Web apps, trading systems, Roblox games, Discord bots and desktop software, built solo.">
+
+<style>
+/* ============================================================
+   FACES. Bricolage is already self-hosted and variable (opsz +
+   wght). v4 uses it far bigger and far tighter than v3 did, so
+   the display axis actually earns its bytes.
+   ============================================================ */
+@font-face{
+  font-family:'Bricolage';
+  src:url('/assets/fonts/bricolage-display.woff2') format('woff2-variations');
+  font-weight:200 800; font-stretch:100%; font-display:swap;
+}
+@font-face{
+  font-family:'Bricolage Fallback';
+  src:local('Segoe UI');
+  size-adjust:105.6%; ascent-override:88.07%; descent-override:25.57%; line-gap-override:0%;
+}
+@font-face{
+  font-family:'Bricolage Fallback';
+  src:local('SF Pro Display'),local('Helvetica Neue'),local('Arial');
+  size-adjust:102.1%; ascent-override:91.06%; descent-override:26.44%; line-gap-override:0%;
+}
+
+/* ============================================================
+   TOKENS. Snapwyrm palette kept. What is gone: nebula, starfield,
+   grain, comet trails, glow shadows, glass. Violet stops being an
+   ambient wash and becomes structure: rules, edges, one accent.
+   ============================================================ */
+:root{
+  --bg:#0a090f;
+  --bg-2:#0e0c15;
+  --panel:#14111d;
+  --panel-2:#1a1626;
+
+  --text:#e6e2f2;
+  --text-hi:#f7f5ff;
+  /* three-step ladder, every step measured against --bg and --panel:
+     .82 = 7.6:1, .70 = 5.1:1 (on panel), .55 = 5.1:1 (on bg).
+     v3's quietest tone was .40, which computes to 3.2:1 and fails AA
+     on exactly the small mono text that carries the machine readings. */
+  --lead:rgba(230,226,242,.82);
+  --muted:rgba(230,226,242,.70);
+  --muted-2:rgba(230,226,242,.55);
+
+  --accent:#8b5cf6;
+  --accent-2:#a78bfa;
+  --cyan:#22d3ee;
+  --mint:#34d399;
+  --gold:#ffd76b;
+  --blue:#4da3ff;
+  --dc:#7d8cf5;
+
+  --rule:rgba(255,255,255,.09);
+  --rule-hi:rgba(255,255,255,.16);
+
+  --font-display:'Bricolage','Bricolage Fallback',system-ui,sans-serif;
+  --font-body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+
+  --pad:clamp(20px,5vw,64px);
+  --maxw:1320px;
+}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body); font-size:16px; line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%; display:block}
+a{color:inherit}
+
+:focus-visible{outline:2px solid var(--accent-2); outline-offset:3px; border-radius:2px}
+
+.wrap{max-width:var(--maxw); margin:0 auto; padding-inline:var(--pad)}
+
+/* ============================================================
+   HEADER. One rule, no chips, no keyboard-shortcut badge.
+   ============================================================ */
+.top{
+  position:sticky; top:0; z-index:50;
+  background:color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--rule);
+}
+.top .wrap{display:flex; align-items:center; gap:24px; height:64px}
+.brand{
+  font-family:var(--font-display); font-weight:700; font-size:19px;
+  letter-spacing:-.02em; color:var(--text-hi); text-decoration:none;
+  display:flex; align-items:center; gap:9px;
+}
+.brand img{width:26px;height:26px}
+.top nav{margin-left:auto; display:flex; gap:26px; align-items:center}
+.top nav a{
+  font-size:14px; color:var(--muted); text-decoration:none;
+  transition:color .18s ease;
+}
+.top nav a:hover{color:var(--text-hi)}
+.top .mail{
+  font-family:var(--font-mono); font-size:13px; color:var(--accent-2);
+  text-decoration:none; border-bottom:1px solid var(--accent);
+  padding-bottom:2px; transition:color .18s ease, border-color .18s ease;
+}
+.top .mail:hover{color:var(--text-hi); border-color:var(--text-hi)}
+@media (max-width:760px){ .top nav a:not(.mail){display:none} }
+
+/* ============================================================
+   OPENING. No status pill, no gradient words, no stat band.
+   The claim is a sentence that the grid below immediately proves.
+   ============================================================ */
+.open{padding:clamp(56px,9vw,116px) 0 clamp(36px,5vw,60px)}
+.open .wrap{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:40px; align-items:end}
+.overline{
+  font-family:var(--font-mono); font-size:12.5px; color:var(--muted-2);
+  letter-spacing:.01em; margin:0 0 22px;
+}
+.overline b{color:var(--muted); font-weight:400}
+h1{
+  font-family:var(--font-display);
+  font-size:clamp(42px,7.4vw,92px);
+  font-weight:700; line-height:.96; letter-spacing:-.035em;
+  margin:0; color:var(--text-hi);
+  font-variation-settings:'opsz' 48;
+}
+h1 .dim{color:var(--muted)}
+.open p.sub{
+  margin:26px 0 0; max-width:56ch; font-size:17px; color:var(--lead);
+}
+
+/* ---- Fluke, the signature ------------------------------------
+   A 17-frame hand-drawn rig already sat in this repo doing nothing
+   but bobbing in the hero. Here he reads the page with you: hover
+   any project and he reacts to that specific one.
+   -------------------------------------------------------------- */
+.fluke{
+  width:clamp(120px,15vw,196px); justify-self:end; position:relative;
+}
+.fluke img{
+  width:100%; filter:drop-shadow(0 14px 34px rgba(0,0,0,.6));
+  transition:opacity .13s ease;
+}
+.fluke figcaption{
+  font-family:var(--font-mono); font-size:11px; color:var(--muted-2);
+  text-align:center; margin-top:10px; min-height:1.4em;
+  transition:color .18s ease;
+}
+@media (max-width:860px){
+  .open .wrap{grid-template-columns:1fr}
+  .fluke{justify-self:start; width:132px; order:-1}
+}
+
+/* ============================================================
+   THE SHELF. Ten artifacts. Screenshot tiles are the evidence,
+   so they get the space; the four with no screenshot are set
+   typographically instead of given fake art.
+   ============================================================ */
+.shelf{padding-bottom:clamp(60px,8vw,110px)}
+.shelf-head{
+  display:flex; align-items:baseline; gap:16px;
+  border-top:1px solid var(--rule); padding-top:18px; margin-bottom:30px;
+}
+.shelf-head h2{
+  font-family:var(--font-display); font-weight:600; font-size:15px;
+  letter-spacing:.01em; margin:0; color:var(--text-hi);
+}
+.shelf-head span{font-family:var(--font-mono); font-size:12.5px; color:var(--muted-2)}
+
+.grid{
+  display:grid; gap:clamp(14px,1.7vw,26px);
+  grid-template-columns:repeat(auto-fill,minmax(310px,1fr));
+}
+.item{
+  display:flex; flex-direction:column;
+  background:var(--panel); border:1px solid var(--rule);
+  border-radius:10px; overflow:hidden;
+  text-decoration:none; color:inherit;
+  transition:border-color .2s ease, background .2s ease, translate .2s ease;
+}
+.item:hover, .item:focus-visible{
+  border-color:color-mix(in srgb, var(--ca,var(--accent)) 55%, transparent);
+  background:var(--panel-2);
+  translate:0 -3px;
+}
+/* the flagship earns a wider tile, because it is the biggest thing here */
+.item.wide{grid-column:span 2}
+@media (max-width:720px){ .item.wide{grid-column:span 1} }
+
+.shot{
+  aspect-ratio:16/10; background:var(--bg-2); overflow:hidden;
+  border-bottom:1px solid var(--rule);
+}
+.shot img{width:100%; height:100%; object-fit:cover}
+.shot.contain{display:grid; place-items:center; padding:26px}
+.shot.contain img{width:auto; max-height:100%; object-fit:contain}
+
+.body{padding:20px 20px 22px; display:flex; flex-direction:column; flex:1}
+.item h3{
+  font-family:var(--font-display); font-size:20px; font-weight:600;
+  letter-spacing:-.018em; margin:0 0 8px; color:var(--text-hi);
+}
+/* status is TYPE, not a badge: a folded project is simply set quieter */
+.item.folded h3{color:var(--muted)}
+.item p{margin:0 0 16px; font-size:14.5px; color:var(--lead); line-height:1.55}
+
+/* the spec plate: machine readings, mono, small, on the thing it describes */
+.plate{
+  margin-top:auto; padding-top:13px; border-top:1px solid var(--rule);
+  font-family:var(--font-mono); font-size:11.5px; color:var(--muted-2);
+  display:flex; flex-wrap:wrap; gap:5px 12px; align-items:baseline;
+}
+.plate .m{color:var(--muted)}
+.plate .host{margin-left:auto; color:var(--ca,var(--accent-2))}
+.folded-note{
+  font-family:var(--font-mono); font-size:11.5px; color:var(--muted-2);
+  margin:0 0 14px; padding-left:13px; border-left:2px solid var(--rule-hi);
+}
+
+/* ============================================================
+   RATES. A table, because that is what a price list is. The v3
+   pricing cards were three SaaS tiers for a service with no tiers.
+   ============================================================ */
+.rates{border-top:1px solid var(--rule); padding:clamp(48px,7vw,90px) 0}
+.rates h2, .about h2, .contact h2{
+  font-family:var(--font-display); font-weight:700;
+  font-size:clamp(28px,4vw,46px); letter-spacing:-.03em;
+  margin:0 0 12px; color:var(--text-hi); line-height:1.05;
+}
+.rates .lede, .about .lede{color:var(--muted); margin:0 0 34px; max-width:60ch}
+table{width:100%; border-collapse:collapse; font-size:15px}
+th{
+  text-align:left; font-family:var(--font-mono); font-weight:400;
+  font-size:11.5px; color:var(--muted-2); padding:0 0 11px;
+  border-bottom:1px solid var(--rule);
+}
+th:last-child, td:last-child{text-align:right}
+td{padding:15px 0; border-bottom:1px solid var(--rule); vertical-align:top}
+td.what{color:var(--text-hi)}
+td.what span{display:block; color:var(--muted); font-size:13.5px; margin-top:3px}
+td.price{font-family:var(--font-mono); color:var(--accent-2); white-space:nowrap}
+.rates .terms{
+  margin-top:26px; font-size:14px; color:var(--muted);
+  display:flex; flex-wrap:wrap; gap:8px 26px;
+}
+.rates .terms b{color:var(--text); font-weight:600}
+
+/* ============================================================
+   ABOUT + CONTACT
+   ============================================================ */
+.about{border-top:1px solid var(--rule); padding:clamp(48px,7vw,90px) 0}
+.about .cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:30px}
+.about .cols div h3{
+  font-family:var(--font-display); font-size:17px; font-weight:600;
+  margin:0 0 8px; color:var(--text-hi); letter-spacing:-.015em;
+}
+.about .cols div p{margin:0; color:var(--lead); font-size:14.5px}
+
+.contact{border-top:1px solid var(--rule); padding:clamp(56px,8vw,110px) 0}
+.contact .row{display:flex; flex-wrap:wrap; gap:14px; margin-top:28px}
+.btn{
+  font-family:var(--font-body); font-size:15px; font-weight:600;
+  padding:13px 22px; border-radius:8px; text-decoration:none;
+  border:1px solid transparent; transition:all .18s ease;
+}
+.btn.primary{background:var(--accent); color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.ghost{border-color:var(--rule-hi); color:var(--text)}
+.btn.ghost:hover{border-color:var(--text-hi); background:rgba(255,255,255,.03)}
+
+footer{border-top:1px solid var(--rule); padding:28px 0 44px}
+footer .wrap{
+  display:flex; flex-wrap:wrap; gap:12px 26px; align-items:center;
+  font-family:var(--font-mono); font-size:12px; color:var(--muted-2);
+}
+footer a{color:var(--muted); text-decoration:none}
+footer a:hover{color:var(--text-hi)}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+  .item:hover{translate:none}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="/assets/mascot/husky-base.webp" alt="">husky</a>
+    <nav>
+      <a href="#work">Work</a>
+      <a href="#rates">Rates</a>
+      <a href="#about">How I work</a>
+      <a class="mail" href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
+    </nav>
+  </div>
+</header>
+
+<section class="open" id="top">
+  <div class="wrap">
+    <div>
+      <p class="overline">Husky &nbsp;/&nbsp; <b>solo developer</b> &nbsp;/&nbsp; eastern time &nbsp;/&nbsp; usually replies within the hour</p>
+      <h1>Ten things I built.<br><span class="dim">Eight are still running.</span></h1>
+      <p class="sub">Web apps, algorithmic trading systems, Roblox games, Discord bots and desktop software. Start to finish, on my own. Everything below is live and clickable, so you can check the work instead of taking my word for it.</p>
+    </div>
+    <figure class="fluke">
+      <img id="flukeImg" src="/assets/mascot/husky-base.webp" alt="Fluke, the mascot">
+      <figcaption id="flukeCap">this is Fluke</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="shelf" id="work">
+  <div class="wrap">
+    <div class="shelf-head">
+      <h2>Everything I have shipped</h2>
+      <span id="shelfCount"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
+<section class="rates" id="rates">
+  <div class="wrap">
+    <h2>What things cost</h2>
+    <p class="lede">Fixed price, agreed before anything starts. No hourly billing, no surprise invoice at the end.</p>
+    <table>
+      <thead><tr><th>Build</th><th>Starting at</th></tr></thead>
+      <tbody>
+        <tr><td class="what">Discord bot<span>Economy, tickets, moderation, roles, auto-reply</span></td><td class="price">$90</td></tr>
+        <tr><td class="what">Landing page or marketing site<span>Built, deployed, and set up to be found in search</span></td><td class="price">$80</td></tr>
+        <tr><td class="what">Web app, tool, or dashboard<span>Frontend, backend, database, auth</span></td><td class="price">$120</td></tr>
+        <tr><td class="what">AI integration<span>An agent that answers, qualifies, and books</span></td><td class="price">$150</td></tr>
+        <tr><td class="what">Stream or social automation<span>Live pipelines, overlays, goals, in-game triggers</span></td><td class="price">$150</td></tr>
+        <tr><td class="what">Automation pipeline<span>If it has an API, it can be wired up</span></td><td class="price">$300</td></tr>
+        <tr><td class="what">Realtime system<span>Multiplayer, live data, anything with a socket</span></td><td class="price">$250</td></tr>
+        <tr><td class="what">Payments and licensing<span>Checkout, entitlements, per-machine binding</span></td><td class="price">$250</td></tr>
+        <tr><td class="what">Desktop application<span>Electron or Tauri, signed and distributable</span></td><td class="price">$400</td></tr>
+        <tr><td class="what">Roblox systems<span>Data layers, economies, leaderboards, anti-exploit</span></td><td class="price">message me</td></tr>
+      </tbody>
+    </table>
+    <p class="terms"><span><b>50% up front</b>, always</span> <span>Scope in writing before work starts</span> <span>Source handed over on final payment</span></p>
+  </div>
+</section>
+
+<section class="about" id="about">
+  <div class="wrap">
+    <h2>How I work</h2>
+    <p class="lede">No agency behind me and no team. One person who finishes things, moves fast with AI tooling, and trusts it exactly as far as it can be verified.</p>
+    <div class="cols">
+      <div><h3>Tell me what you are building</h3><p>Discord is fastest, email works too. One paragraph is enough. I will ask for the rest.</p></div>
+      <div><h3>You get a fixed quote back</h3><p>What it costs and when you will have it, agreed before anything starts.</p></div>
+      <div><h3>Built, tested, live</h3><p>Everything I ship gets tested like someone else wrote it, and it goes out running rather than zipped.</p></div>
+      <div><h3>Self-taught, still shipping</h3><p>I do not stay in one lane. Web apps one week, a Roblox economy the next, a trading system after that.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact">
+  <div class="wrap">
+    <h2>Tell me what you need</h2>
+    <p class="lede">I will quote it straight, and say so if it is not a fit for me.</p>
+    <div class="row">
+      <a class="btn primary" href="mailto:husky@snapwyrm.com">Email me</a>
+      <a class="btn ghost" href="https://discord.com/users/247455709879468043">Discord: smthusky</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Husky, eastern time</span>
+    <a href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
+    <a href="https://github.com/snapwyrm/husky-page">source of this page</a>
+  </div>
+</footer>
+
+<script>
+/* ============================================================
+   The same project data v3 used. Content did not change; only
+   how it is presented did.
+   ============================================================ */
+var P = [
+  { id:'snapwyrm', name:'Snapwyrm', status:'live', c:'var(--accent-2)', wide:true, face:'overlord',
+    blurb:'A provably-fair arcade platform, built end to end, solo.',
+    stack:['React','Workers','D1','Shopify','realtime'],
+    href:'https://snapwyrm.com', hrefLabel:'snapwyrm.com',
+    art:{type:'mark', src:'/assets/work/snapwyrm-mark.webp'} },
+
+  { id:'offsite', name:'OffsiteAI', status:'live', c:'var(--blue)', face:'grin',
+    blurb:'An AI worker that answers customers and books the job, around the clock.',
+    stack:['AI','Node','Workers'],
+    href:'https://offsiteai.io', hrefLabel:'offsiteai.io',
+    art:{type:'shot', src:'/assets/work/offsiteai.webp'} },
+
+  { id:'mines', name:'Husky’s Minesweeper', status:'live', c:'var(--gold)', face:'blep',
+    blurb:'A Lua game with a 1,000+ member community and cross-platform accounts.',
+    stack:['Lua','Roblox','secured API'],
+    href:'https://www.roblox.com/games/102439634201559/Huskys-Minesweeper', hrefLabel:'roblox.com',
+    art:{type:'shot', src:'/assets/work/minesweeper.webp'} },
+
+  { id:'insyncpost', name:'InsyncPost', status:'live', c:'#ff2d78', face:'sheepish',
+    loc:21404, files:45, lang:'Vue + Python',
+    blurb:'A native scheduler for chess clip content, with browser automation doing the upload.',
+    stack:['Vue','Python','browser automation'],
+    art:{type:'shot', src:'/assets/work/insyncpost.webp'} },
+
+  { id:'insynctransfer', name:'InsyncTransfer', status:'live', c:'#34d399', face:'blush',
+    loc:3816, files:25, lang:'Rust + Vue',
+    blurb:'Native desktop file transfer across a private mesh. No cloud touches a byte.',
+    stack:['Rust','Tauri','axum','Tailscale'],
+    art:{type:'shot', src:'/assets/work/insynctransfer.webp'} },
+
+  { id:'backtest', name:'BacktestStation', status:'folded', c:'#22d3ee', face:'growl',
+    loc:69071, files:272, lang:'Python',
+    fold:'folded into InSync, the desktop app',
+    blurb:'A research bench for futures strategies, built so a fake edge cannot hide.',
+    stack:['Python','DuckDB','Vue 3','walk-forward'],
+    art:{type:'shot', src:'/assets/work/backteststation.webp'} },
+
+  { id:'bots', name:'Discord bots', status:'in production', c:'var(--dc)', face:'wink',
+    blurb:'Economy, tickets, moderation, giveaways, roles and AI auto-reply, running in real servers.',
+    stack:['Discord API','Node','D1'] },
+
+  { id:'stream', name:'Stream + social automation', status:'live', c:'var(--mint)', face:'tongue',
+    blurb:'TikTok Live pipelines driving overlays, goals and in-game triggers.',
+    stack:['Python','TikTok Live','realtime'] },
+
+  { id:'dom', name:'Snapwyrm DOM', status:'shipped', c:'var(--cyan)', face:'base',
+    blurb:'An Electron desktop app with licensing and per-machine binding.',
+    stack:['Electron','Sellpass','licensing'] },
+
+  { id:'tradebot', name:'InSync Trade Bot', status:'folded', c:'#ffd76b', face:'annoyed',
+    loc:42182, files:150, lang:'Python',
+    fold:'folded into InSync, the desktop app',
+    blurb:'End-to-end algorithmic trading on Nasdaq futures, run entirely from Discord.',
+    stack:['Python','Databento','ML','Discord API'] }
+];
+
+var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+function card(p){
+  var tag = p.href ? 'a' : 'div';
+  var attrs = p.href ? ' href="'+p.href+'" target="_blank" rel="noopener"' : '';
+  var art = '';
+  if (p.art){
+    art = '<div class="shot'+(p.art.type==='mark'?' contain':'')+'">'+
+          '<img src="'+p.art.src+'" alt="'+esc(p.name)+'" loading="lazy"></div>';
+  }
+  /* the spec plate: only real readings, never invented ones */
+  var plate = [];
+  if (p.loc)  plate.push('<span><span class="m">'+p.loc.toLocaleString('en-US')+'</span> lines</span>');
+  if (p.files)plate.push('<span><span class="m">'+p.files+'</span> files</span>');
+  /* a literal middot, not the entity: this string goes through esc() */
+  plate.push('<span>'+esc(p.lang || p.stack.slice(0,3).join(' · '))+'</span>');
+  if (p.hrefLabel) plate.push('<span class="host">'+esc(p.hrefLabel)+' ↗</span>');
+
+  return '<'+tag+attrs+' class="item'+(p.wide?' wide':'')+(p.status==='folded'?' folded':'')+
+    '" style="--ca:'+p.c+'" data-face="'+p.face+'" data-name="'+esc(p.name)+'">'+
+    art+
+    '<div class="body">'+
+      '<h3>'+esc(p.name)+'</h3>'+
+      (p.fold ? '<p class="folded-note">'+esc(p.fold)+'</p>' : '')+
+      '<p>'+esc(p.blurb)+'</p>'+
+      '<div class="plate">'+plate.join('')+'</div>'+
+    '</div>'+
+  '</'+tag+'>';
+}
+
+document.getElementById('grid').innerHTML = P.map(card).join('');
+
+var live = P.filter(function(p){ return p.status !== 'folded'; }).length;
+document.getElementById('shelfCount').textContent =
+  P.length + ' projects, ' + live + ' still running';
+
+/* ---- Fluke reads along with you ----------------------------
+   Preload every face so the swap never flickers.
+   ------------------------------------------------------------ */
+var img = document.getElementById('flukeImg'),
+    cap = document.getElementById('flukeCap'),
+    baseSrc = '/assets/mascot/husky-base.webp',
+    faces = {};
+
+P.forEach(function(p){
+  if (p.face && !faces[p.face]){
+    var i = new Image();
+    i.src = '/assets/mascot/husky-'+p.face+'.webp';
+    faces[p.face] = i.src;
+  }
+});
+
+var restore;
+document.getElementById('grid').addEventListener('pointerover', function(e){
+  var it = e.target.closest('.item'); if (!it) return;
+  clearTimeout(restore);
+  img.src = faces[it.dataset.face] || baseSrc;
+  cap.textContent = it.dataset.name;
+});
+document.getElementById('grid').addEventListener('pointerleave', function(){
+  restore = setTimeout(function(){
+    img.src = baseSrc;
+    cap.textContent = 'this is Fluke';
+  }, 260);
+});
+</script>
+</body>
+</html>
