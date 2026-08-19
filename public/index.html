@@ -98,8 +98,9 @@
   --text-hi:#f7f5ff;
   /* three-step ladder, every step measured against --bg and --panel:
      .82 = 7.6:1, .70 = 5.1:1 (on panel), .55 = 5.1:1 (on bg).
-     v3's quietest tone was .40, which computes to 3.2:1 and fails AA
-     on exactly the small mono text that carries the machine readings. */
+     (An earlier comment here claimed this was fixing a .40 tone inherited
+     from the previous design. That was wrong: the old page uses .52, which
+     measures 4.70:1 and passes. This ladder is an improvement, not a fix.) */
   --lead:rgba(230,226,242,.82);
   --muted:rgba(230,226,242,.70);
   --muted-2:rgba(230,226,242,.55);
