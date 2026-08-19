@@ -354,6 +354,24 @@ footer .wrap{
 }
 footer a{color:var(--muted); text-decoration:none}
 footer a:hover{color:var(--text-hi)}
+/* the way through to the interactive build. This page is the front door;
+   the old one still exists in full at /advanced.html, so none of its
+   instruments (the road, the minesweeper, the descent) had to be thrown
+   away to make the front door quiet. */
+footer .alt{
+  margin-left:auto; display:inline-flex; align-items:center; gap:7px;
+  font-family:var(--font-body); font-size:13px; font-weight:600;
+  color:var(--text); border:1px solid var(--rule-hi); border-radius:8px;
+  padding:8px 14px; white-space:nowrap;
+  transition:border-color .18s ease, background .18s ease, color .18s ease;
+}
+footer .alt span{color:var(--accent-2); transition:translate .18s ease}
+footer .alt:hover{
+  color:var(--text-hi); border-color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+}
+footer .alt:hover span{translate:2px -2px}
+@media (max-width:560px){ footer .alt{margin-left:0} }
 
 /* ============================================================
    MOTION. The OS preference is a DEFAULT, not a verdict, so every
@@ -506,6 +524,7 @@ html.motion-off .item:hover{translate:none}
   <div class="wrap">
     <a href="mailto:husky@snapwyrm.com">husky@snapwyrm.com</a>
     <a href="https://github.com/snapwyrm/husky-page">source of this page</a>
+    <a class="alt" href="/advanced.html">Advanced version <span>↗</span></a>
   </div>
 </footer>
 
