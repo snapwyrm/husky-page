@@ -2647,6 +2647,76 @@ html.motion-off .bs-off #bsLayer,html.motion-off .bs-off .mascot{animation:none!
 }
 .motion-pill button.go{background:var(--charge);color:#fff}
 .motion-pill button:hover{box-shadow:var(--rim-2),0 0 14px -4px var(--accent-glow)}
+
+/* ==========================================================================
+   PROFESSIONAL PASS (2026-08-19)
+
+   This page keeps every instrument: the road, the playable minesweeper, the
+   scrubbed proof curve, the command palette, the descent. What it loses is
+   the chrome that made the old front page read as a template. Same five
+   components that came off index.html:
+
+     1. gradient headline text with a shimmer animation
+     2. numbered section eyebrows (01 / 02 / 03) with a fading hairline
+     3. outlined status pills with a glowing animated dot
+     4. per-card LIVE / SHIPPED / DEPRECATED badges, same treatment
+     5. filter chips as pills with count superscripts
+
+   Written as a trailing override rather than edits scattered through 6,000
+   lines of entangled CSS: lower risk, and deleting this block restores the
+   old look exactly. It must stay as the last rules in this stylesheet.
+   (Do NOT write the closing style tag as literal text in here: the HTML
+   parser ends a style element at the first such string it sees, even inside
+   a CSS comment, which silently turned every rule below it into page text.)
+   ========================================================================== */
+
+/* 1. headline emphasis becomes weight and colour, not a moving gradient */
+.grad{
+  background:none;-webkit-background-clip:border-box;background-clip:border-box;
+  color:var(--text-hi);-webkit-text-fill-color:var(--text-hi);
+  animation:none;
+}
+
+/* 2. the numbering encoded nothing: these sections are not a sequence */
+.sec-kicker .idx{display:none}
+.sec-kicker::after{background:var(--border)}
+
+/* 3. status stops being a pill and becomes a plain line of text.
+      This also fixes a real AA failure: the pill measured 2.8:1 at 11px. */
+.tag{
+  border:0;background:none;box-shadow:none;padding:0;border-radius:0;
+  backdrop-filter:none;-webkit-backdrop-filter:none;
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  letter-spacing:.01em;text-transform:none;color:var(--muted);
+}
+.tag .dot{display:none}
+/* the road's card sets these at higher specificity, so match it */
+.roadask .dest-card .tag{
+  font-family:var(--font-body);font-size:13px;letter-spacing:.01em;
+  text-transform:none;color:var(--muted);
+}
+
+/* 4. same for the per-card status, and the glowing paw dot goes with it */
+.status{
+  font-family:var(--font-body);font-size:12.5px;letter-spacing:0;
+  text-transform:none;color:var(--muted);
+}
+.status::before{display:none}
+
+/* 5. filters become quiet text toggles. Kept, not deleted: filtering is a
+      real feature here, it was only the pill treatment that read as chrome. */
+.idx-filters{gap:0 20px}
+.idx-filters .f{
+  border-radius:0;background:none;box-shadow:none;padding:5px 0;
+  font-family:var(--font-body);font-size:13.5px;color:var(--muted-2);
+  border-bottom:1px solid transparent;transition:color .18s ease,border-color .18s ease;
+}
+.idx-filters .f:hover{color:var(--text);transform:none;box-shadow:none}
+.idx-filters .f[aria-pressed="true"]{
+  color:var(--text-hi);background:none;box-shadow:none;animation:none;
+  border-bottom-color:var(--accent);
+}
+.idx-filters .f i{opacity:.55;margin-left:5px;font-size:11px}
 </style>
 </head>
 <body>
