@@ -450,8 +450,12 @@ function card(p){
   var attrs = p.href ? ' href="'+p.href+'" target="_blank" rel="noopener"' : '';
   var art = '';
   if (p.art){
+    /* NOT lazy. There are six of these and they total ~240KB, and they are
+       the entire argument the page makes. Deferring them means a visitor
+       sees empty tiles exactly where the proof should be. The CSS sets
+       aspect-ratio on .shot, so eager loading costs no layout shift. */
     art = '<div class="shot'+(p.art.type==='mark'?' contain':'')+'">'+
-          '<img src="'+p.art.src+'" alt="'+esc(p.name)+'" loading="lazy"></div>';
+          '<img src="'+p.art.src+'" alt="'+esc(p.name)+'" decoding="async" fetchpriority="high"></div>';
   }
   /* the spec plate: only real readings, never invented ones */
   var plate = [];
