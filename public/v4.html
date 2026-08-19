@@ -36,24 +36,30 @@
 
 <style>
 /* ============================================================
-   FACES. Bricolage is already self-hosted and variable (opsz +
-   wght). v4 uses it far bigger and far tighter than v3 did, so
-   the display axis actually earns its bytes.
+   FACES. Familjen Grotesk, self-hosted as a latin subset, variable
+   400-700 so nothing on the page gets faux-bolded. 18.9KB, and it
+   keeps the zero-external-requests rule: no Google Fonts link.
+
+   The two fallback faces carry metric overrides measured against
+   this file rather than copied, so the swap costs no layout shift:
+     Segoe UI  x-height .500 vs Familjen .500  -> size-adjust 100%
+     Arial/SF  x-height .520 vs Familjen .500  -> size-adjust 96.15%
+   Ascent and descent are expressed against the adjusted em.
    ============================================================ */
 @font-face{
-  font-family:'Bricolage';
-  src:url('/assets/fonts/bricolage-display.woff2') format('woff2-variations');
-  font-weight:200 800; font-stretch:100%; font-display:swap;
+  font-family:'Familjen';
+  src:url('/assets/fonts/familjen-display.woff2') format('woff2');
+  font-weight:400 700; font-display:swap;
 }
 @font-face{
-  font-family:'Bricolage Fallback';
+  font-family:'Familjen Fallback';
   src:local('Segoe UI');
-  size-adjust:105.6%; ascent-override:88.07%; descent-override:25.57%; line-gap-override:0%;
+  size-adjust:100%; ascent-override:103%; descent-override:23%; line-gap-override:0%;
 }
 @font-face{
-  font-family:'Bricolage Fallback';
+  font-family:'Familjen Fallback';
   src:local('SF Pro Display'),local('Helvetica Neue'),local('Arial');
-  size-adjust:102.1%; ascent-override:91.06%; descent-override:26.44%; line-gap-override:0%;
+  size-adjust:96.15%; ascent-override:107.12%; descent-override:23.92%; line-gap-override:0%;
 }
 
 /* ============================================================
@@ -88,7 +94,7 @@
   --rule:rgba(255,255,255,.09);
   --rule-hi:rgba(255,255,255,.16);
 
-  --font-display:'Bricolage','Bricolage Fallback',system-ui,sans-serif;
+  --font-display:'Familjen','Familjen Fallback',system-ui,sans-serif;
   --font-body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 
@@ -154,7 +160,6 @@ h1{
   font-size:clamp(42px,7.4vw,92px);
   font-weight:700; line-height:.96; letter-spacing:-.035em;
   margin:0; color:var(--text-hi);
-  font-variation-settings:'opsz' 48;
 }
 h1 .dim{color:var(--muted)}
 .open p.sub{
